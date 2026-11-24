@@ -76,9 +76,9 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .st.big i.c{background:var(--or);color:#111;opacity:1}
 .rhl{font-size:11px;color:var(--mut);margin-bottom:8px}.rhl b.xx{color:#8d939c;font-weight:500}.rhl i{font-style:normal;opacity:.4}
 .nostrum .rh,.nostrum .rhl{display:none}
-.sc{background:#f3eee5;border-radius:6px;overflow:hidden;min-height:64px}
+.sc{background:#14171c;border:1px solid #262a31;border-radius:6px;overflow:hidden;min-height:64px}
 .sc svg{display:block;width:100%;height:auto}
-.sc .sm{font-size:11px;color:#6b6257;padding:6px 8px}
+.sc .sm{font-size:11px;color:var(--mut);padding:6px 8px}
 .bc.on .sc{box-shadow:inset 0 0 0 2px rgba(255,122,47,.55)}
 /* sheet */
 .sh{display:flex;align-items:center;gap:12px;margin:6px 0 10px}
@@ -498,16 +498,16 @@ function drawStaff(el,bi,e8,clef){
   if(!window.Vex){el.innerHTML='<div class="sm">楽譜の部品を読み込めませんでした</div>';return}
   const VF=Vex.Flow,b=S.bars[bi],W=clef?300:230,H=104;el.innerHTML='';
   try{
-  const r=new VF.Renderer(el,VF.Renderer.Backends.SVG);r.resize(W,H);const ctx=r.getContext();
+  const r=new VF.Renderer(el,VF.Renderer.Backends.SVG);r.resize(W,H);const ctx=r.getContext();const INK='#c9ced6';ctx.setFillStyle(INK);ctx.setStrokeStyle(INK);
   const keySpec=NAMES[(PC[song.ref]+opt().tr+120)%12];
-  const stave=new VF.Stave(2,4,W-4,{space_above_staff_ln:2,space_below_staff_ln:2});if(clef)stave.addClef('treble','default','8vb').addKeySignature(keySpec).addTimeSignature(`${b.beats}/4`);stave.setContext(ctx).draw();
+  const stave=new VF.Stave(2,4,W-4,{space_above_staff_ln:2,space_below_staff_ln:2});if(clef)stave.addClef('treble','default','8vb').addKeySignature(keySpec).addTimeSignature(`${b.beats}/4`);stave.setStyle({strokeStyle:'#5b616b',fillStyle:INK});stave.setContext(ctx).draw();
   const notes=[],ties=[];
   barEvents(bi).forEach(ev=>{
     const keys=ev.c==='X'?['b/4/x2']:pitches(ev.c),on=e8>=ev.pos&&e8<ev.pos+ev.len;let prev=null;
     splitLen(ev.len).forEach(l=>{
       const d=DUR[l],n=new VF.StaveNote(Object.assign({keys:keys||['b/4'],duration:d,auto_stem:true,clef:'treble'},keys?{}:{type:'r'}));
       if(d.endsWith('d'))VF.Dot.buildAndAttach([n],{all:true});
-      if(on)n.setStyle({fillStyle:'#e8641c',strokeStyle:'#e8641c'});
+      n.setStyle(on?{fillStyle:'#ff7a2f',strokeStyle:'#ff7a2f'}:{fillStyle:INK,strokeStyle:INK});n.setLedgerLineStyle&&n.setLedgerLineStyle({strokeStyle:'#7a818b',fillStyle:'#7a818b'});
       if(prev&&keys&&ev.c!=='X')ties.push(new VF.StaveTie({first_note:prev,last_note:n,first_indices:keys.map((_,i)=>i),last_indices:keys.map((_,i)=>i)}));
       prev=n;notes.push(n)})
   });
