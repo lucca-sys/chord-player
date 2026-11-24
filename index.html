@@ -33,7 +33,12 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .info{padding:0 22px;border-left:1px solid var(--line)}.info:first-child{padding-left:0;border:0}
 .info span{display:block;font-size:12px;color:var(--mut)}
 .info b{font-size:20px;white-space:nowrap}
-.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.capo{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px 4px 3px 12px}
+.capo>span{font-size:13px;color:var(--mut);white-space:nowrap}
+.capo .step{border:0}.capo .step b{min-width:34px;font-size:18px}
+.rec{min-height:34px;padding:0 10px;border-radius:8px;background:rgba(95,211,155,.14);color:var(--gr);font-size:13px;font-weight:700;white-space:nowrap}
+.rec.same{background:transparent;color:var(--mut);font-weight:500}
 .ab{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:9px;background:var(--card);font-size:14px;white-space:nowrap}
 .ab[aria-pressed=true]{border-color:var(--or);color:var(--or)}
 /* columns */
@@ -176,6 +181,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
       <div class="info"><span>転調</span><b class="cn" id="iMod"></b></div>
     </div>
     <div class="acts">
+      <div class="capo"><span>カポ</span><div class="step"><button class="capoM" aria-label="カポを下げる">−</button><b class="cn capoV">0</b><button class="capoP" aria-label="カポを上げる">+</button></div><button class="rec capoRec"></button></div>
       <button class="ab" id="aSync">⏱ 動画と合わせる</button>
       <button class="ab" id="aLoop" aria-pressed="false">🔁 セクションをくり返す</button>
       <button class="ab" id="aEdit">✎ 編集</button>
@@ -218,6 +224,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   <div class="pt"><button data-t="disp" aria-pressed="true">表示設定</button><button data-t="sync">動画と合わせる</button><button data-t="edit">編集</button><button class="x" id="pnX" aria-label="閉じる">×</button></div>
   <div data-p="disp" class="pb2">
     <div class="row"><span>移調</span><div class="step"><button id="trM" aria-label="半音下げる">−</button><b class="cn" id="trV">0</b><button id="trP" aria-label="半音上げる">+</button></div></div>
+    <div class="row"><span>カポ</span><div style="display:flex;gap:8px;align-items:center"><button class="rec capoRec"></button><div class="step"><button class="capoM" aria-label="カポを下げる">−</button><b class="cn capoV">0</b><button class="capoP" aria-label="カポを上げる">+</button></div></div></div>
     <div class="row"><span>表記</span><div class="seg" id="disp"><button data-d="name">コード名</button><button data-d="deg">度数</button><button data-d="both">両方</button></div></div>
     <label class="ck"><input type="checkbox" id="oSimple">シンプル（テンションや分数コードを省く）</label>
     <label class="ck"><input type="checkbox" id="oPower">パワーコードで表示（ルート＋5度）</label>
@@ -327,7 +334,10 @@ const CH={
  'Bm7':{f:[-1,2,0,2,0,2],g:[0,1,0,2,0,3]},'B7':{f:[-1,2,1,2,0,2],g:[0,2,1,3,0,4]},'E':{f:[0,2,2,1,0,0],g:[0,2,3,1,0,0]},'Em':{f:[0,2,2,0,0,0],g:[0,2,3,0,0,0]},
  'E7':{f:[0,2,0,1,0,0],g:[0,2,0,1,0,0]},'Em7':{f:[0,2,0,0,0,0],g:[0,2,0,0,0,0]},'F':{f:[1,3,3,2,1,1],g:[1,3,4,2,1,1],b:[1,0,5]},
  'F#m':{f:[2,4,4,2,2,2],g:[1,3,4,1,1,1],b:[2,0,5]},'G':{f:[3,2,0,0,3,3],g:[2,1,0,0,3,4]},'G7':{f:[3,2,0,0,0,1],g:[3,2,0,0,0,1]},
- 'GM7':{f:[3,-1,0,0,0,2],g:[2,0,0,0,0,1]},'Gsus2/A':{f:[-1,0,0,2,3,3],g:[0,0,0,1,2,3]},'C7':{f:[-1,3,2,3,1,0],g:[0,3,2,4,1,0]},'D7':{f:[-1,-1,0,2,1,2],g:[0,0,0,2,1,3]}
+ 'GM7':{f:[3,-1,0,0,0,2],g:[2,0,0,0,0,1]},'Gsus2/A':{f:[-1,0,0,2,3,3],g:[0,0,0,1,2,3]},'C7':{f:[-1,3,2,3,1,0],g:[0,3,2,4,1,0]},'CM7':{f:[-1,3,2,0,0,0],g:[0,3,2,0,0,0]},'Cadd9':{f:[-1,3,2,0,3,0],g:[0,2,1,0,3,0]},
+ 'Dm7':{f:[-1,-1,0,2,1,1],g:[0,0,0,2,1,1]},'Dsus4':{f:[-1,-1,0,2,3,3],g:[0,0,0,1,2,3]},'Esus4':{f:[0,2,2,2,0,0],g:[0,2,3,4,0,0]},'Asus2':{f:[-1,0,2,2,0,0],g:[0,0,1,2,0,0]},
+ 'FM7':{f:[-1,-1,3,2,1,0],g:[0,0,3,2,1,0]},'G/B':{f:[-1,2,0,0,3,3],g:[0,1,0,0,3,4]},'C/E':{f:[0,3,2,0,1,0],g:[0,3,2,0,1,0]},'Em/D':{f:[-1,-1,0,0,0,0],g:[0,0,0,0,0,0]},
+ 'Am/G':{f:[3,0,2,2,1,0],g:[4,0,2,3,1,0]},'Gsus4':{f:[3,2,0,0,1,3],g:[2,1,0,0,3,4]},'E5':{f:[0,2,2,-1,-1,-1],g:[0,1,1,0,0,0]},'D7':{f:[-1,-1,0,2,1,2],g:[0,0,0,2,1,3]}
 };
 const NAMES=['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
 const PC={C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11};
@@ -350,10 +360,10 @@ function conv(t){
   const m=t.match(RX);if(!m)return {n:t};
   const o=opt();let r=PC[m[1]],q=m[2],b=m[3]!=null?PC[m[3]]:null;
   if(o.power){q='5';b=null}else if(o.simple){q=simpQ(q);b=null}
-  r=(r+o.tr+120)%12;if(b!=null)b=(b+o.tr+120)%12;
+  const sh=o.tr-(o.capo||0);r=(r+sh+120)%12;if(b!=null)b=(b+sh+120)%12;
   return {n:NAMES[r]+q+(b!=null?'/'+NAMES[b]:''),r,q,b};
 }
-const keyPc=()=>(PC[song.ref]+opt().tr+120)%12;
+const keyPc=()=>(PC[song.ref]+opt().tr-(opt().capo||0)+120)%12;
 const deg=r=>DEG[(r-keyPc()+120)%12];
 const col=r=>st.color?`hsl(${HUE[r]} 72% 68%)`:'inherit';
 function chtml(c){
@@ -429,7 +439,7 @@ function renderSheet(){
   let h='',first=true;
   S.secs.forEach((s,si)=>{if(s.to<=s.from)return;
     h+=`<div class="sh"><h2>${esc(s.name)}</h2><i></i></div>`;
-    if(first){h+=`<div class="kb"><span>キー ${keyName()}</span><i></i></div>`;first=false}
+    if(first){const cp=opt().capo||0;h+=`<div class="kb"><span>キー ${keyName()}${cp?` ／ カポ${cp}：${keyName(true).split(' ')[0]}の形で弾く`:''}</span><i></i></div>`;first=false}
     h+='<div class="grid">';
     for(let i=s.from;i<s.to;i++){const b=S.bars[i];
       h+=`<button class="bc" data-i="${i}" aria-label="${i+1}小節目から再生"><span class="bn">${i+1}</span>${i===0?`<span class="ts">${song.ts}</span>`:''}<div class="cg cn" style="--n:${b.beats}">`+
@@ -441,7 +451,20 @@ function renderSheet(){
   cards=$$('#sheet .bc');
   last={bi:-2,beat:-99,k:-2};
 }
-function keyName(){const r=(PC[song.key]+opt().tr+120)%12;return `${NAMES[r]} ${song.mode}`}
+function keyName(shapeKey){const r=(PC[song.key]+opt().tr-(shapeKey?(opt().capo||0):0)+120)%12;return `${NAMES[r]} ${song.mode}`}
+/* むずかしさ：開放の押さえ方=1、パワーコード=2、セーハ=3、図なし=5 */
+function hard(c){if(c.r==null)return 0;const s=shape(c);if(!s)return 5;if(c.q==='5')return 2;return s.b?3:1}
+function recCapo(){
+  const o=opt(),keep=o.capo;let best=0,bs=1e9;
+  for(let k=0;k<=7;k++){o.capo=k;let sc=0;S.bars.forEach(b=>segs(b).forEach(g=>sc+=hard(g.c)));sc+=k*.5;if(sc<bs-1e-9){bs=sc;best=k}}
+  o.capo=keep;return best;
+}
+function capoUI(){
+  const o=opt(),c=o.capo||0,r=recCapo();
+  $$('.capoV').forEach(e=>e.textContent=c);
+  $$('.capoRec').forEach(e=>{e.textContent=r===c?`おすすめ カポ${r} ✓`:`おすすめ カポ${r}`;e.classList.toggle('same',r===c);e.dataset.r=r});
+}
+function setCapo(k){opt().capo=Math.max(0,Math.min(9,k));capoUI();rerender()}
 function renderTimeline(){
   const T=S.total||1;
   $('#tl').innerHTML='<em id="tlf"></em>'+S.secs.filter(s=>s.to>s.from).map(s=>`<span style="flex:${s.eb-s.sb}" data-sb="${s.sb}">${esc(s.name)}</span>`).join('')+'<b id="tlh"></b>';
@@ -453,15 +476,16 @@ function loadSong(id){
   $('#songs').innerHTML=Object.entries(SONGS).map(([k,v])=>`<button data-s="${k}" aria-pressed="${k===id}">${esc(v.title)}</button>`).join('');
   $('#artist').textContent=song.artist;$('#title').textContent=`${song.artist} - ${song.title}`;
   document.title=`${song.title} のコード進行`;
-  renderInfo();renderSheet();renderTimeline();syncPanel();
+  renderInfo();renderSheet();renderTimeline();syncPanel();capoUI();
   $('#ed').value=getText(id);$('#edMsg').textContent='';
   $('#links').innerHTML=`<a href="https://www.youtube.com/results?search_query=${encodeURIComponent(song.artist+' '+song.title)}" target="_blank" rel="noopener">YouTubeで別の動画を探す</a>`;
   clock.base=0;cueVideo();save();
 }
 function renderInfo(){
-  $('#iKey').textContent=keyName();$('#iTs').textContent=song.ts;$('#iBpm').textContent=`${Math.round(bpm())} BPM`;$('#iMod').textContent=`${song.mods} 回`;$('#nowKey').textContent=keyName();
+  const cp=opt().capo||0;$('#iKey').textContent=keyName();$('#iTs').textContent=song.ts;$('#iBpm').textContent=`${Math.round(bpm())} BPM`;$('#iMod').textContent=`${song.mods} 回`;$('#nowKey').textContent=cp?`${keyName()}（カポ${cp}・${keyName(true).split(' ')[0]}の形）`:keyName();
+  $$('.dgs figcaption')[0].textContent=cp?`押さえ方（今）・カポ${cp}`:'押さえ方（今）';
 }
-function rerender(){buildChanges();renderInfo();renderSheet();last.cn=last.nn=null;save()}
+function rerender(){buildChanges();renderInfo();renderSheet();capoUI();last.cn=last.nn=null;save()}
 
 /* ---------- 時間（動画 or 内蔵クロック） ---------- */
 let YTP=null,ytReady=false,ytOK=false,curVid='',vLastT=0,vLastP=0;
@@ -573,6 +597,7 @@ $('#pnX').onclick=closePanel;
 $('.pt').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)openPanel(b.dataset.t)});
 $('#aSync').onclick=()=>openPanel('sync');$('#aEdit').onclick=()=>openPanel('edit');
 $('#vmsg').addEventListener('click',e=>{if(e.target.id==='vOpen'){openPanel('sync');$('#url').focus()}});
+document.addEventListener('click',e=>{const t=e.target.closest('.capoM,.capoP,.capoRec');if(!t)return;const c=opt().capo||0;if(t.classList.contains('capoM'))setCapo(c-1);else if(t.classList.contains('capoP'))setCapo(c+1);else setCapo(+t.dataset.r)});
 $('#trM').onclick=()=>{opt().tr=(opt().tr-1+18)%12-6;syncPanel();rerender()};
 $('#trP').onclick=()=>{opt().tr=(opt().tr+1+18)%12-6;syncPanel();rerender()};
 $('#disp').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;st.disp=b.dataset.d;syncPanel();rerender()});
