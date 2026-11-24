@@ -242,7 +242,9 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
     <button class="bigbtn sub" id="markN">ここが今の小節の頭</button>
     <div class="row"><span>微調整</span><div class="step"><button id="offM" aria-label="コードを早める">◀</button><b class="cn" id="offV">—</b><button id="offP" aria-label="コードを遅らせる">▶</button></div></div>
     <p class="msg" id="syncMsg"></p>
-    <p>動画を変える（YouTubeのURLを貼る）</p>
+    <p>動画を選ぶ</p>
+    <div class="edb" id="presets"></div>
+    <p>ほかの動画にする（YouTubeのURLを貼る）</p>
     <div class="urlr"><input id="url" type="url" inputmode="url" placeholder="https://youtu.be/…" aria-label="YouTubeのURL"><button id="load">読み込む</button></div>
   </div>
   <div data-p="edit" class="pb2 sy" hidden>
@@ -270,7 +272,7 @@ C | D | Bm | Em D
 Am | A#dim | B | B`;
 const SOLO=Array(6).fill('Em Em F Dm | Em Em F Dm | Em Em F Dm | Em Em F Dm').join('\n');
 const SONGS={
- mari:{title:'マリーゴールド',artist:'あいみょん',bpm:106,key:'D',mode:'major',ref:'D',ts:'4/4',mods:0,vid:'0xSiBpUdW4E',def:{simple:true,power:false},
+ mari:{title:'マリーゴールド',artist:'あいみょん',bpm:106,key:'D',mode:'major',ref:'D',ts:'4/4',mods:0,vid:'0xSiBpUdW4E',vids:[{l:'公式MV',id:'0xSiBpUdW4E'}],def:{simple:true,power:false},
   text:`[イントロ]
 Dadd9 Dadd9 DM7 D | Dadd9 Dadd9 DM7 D | Dadd9 Dadd9 DM7 D
 D | A/C# | Bm7 | F#m
@@ -289,7 +291,7 @@ D | A/C# | Bm7 | Asus4 A
 G | D/F# Bm7 | G | A
 [間奏]
 D | A`},
- lazy:{title:'Don’t say “lazy”',artist:'桜高軽音部',bpm:181,key:'E',mode:'minor',ref:'G',ts:'4/4',mods:0,vid:'',def:{simple:false,power:true},
+ lazy:{title:'Don’t say “lazy”',artist:'桜高軽音部',bpm:181,key:'E',mode:'minor',ref:'G',ts:'4/4',mods:0,vid:'5CSNv9MNEC4',vids:[{l:'原曲（ポニーキャニオン公式）',id:'5CSNv9MNEC4'},{l:'オフボーカル（歌なし）',id:'AgW5PaQ6LMY'}],def:{simple:false,power:true},
   text:`[イントロ]
 N.C.
 [Aメロ]
@@ -351,7 +353,7 @@ try{Object.assign(st,JSON.parse(localStorage.getItem('ct2')||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem('ct2',JSON.stringify(st))}catch(e){}};
 let song,S,CHG=[],cards=[];
 const opt=()=>st.opt[st.song]||(st.opt[st.song]={...SONGS[st.song].def,tr:0});
-const vs=()=>st.v[st.song]||(st.v[st.song]={vid:SONGS[st.song].vid,off:null,bpm:SONGS[st.song].bpm});
+const vs=()=>{const v=st.v[st.song]||(st.v[st.song]={vid:SONGS[st.song].vid,off:null,bpm:SONGS[st.song].bpm});if(!v.vid&&SONGS[st.song].vid)v.vid=SONGS[st.song].vid;return v};
 const getText=id=>{try{return localStorage.getItem('ct2-'+id)||SONGS[id].text}catch(e){return SONGS[id].text}};
 
 function simpQ(q){if(q==='5')return '5';if(/^m7/.test(q))return 'm7';if(/^m/.test(q))return 'm';if(/^dim/.test(q))return 'dim';if(/^7/.test(q))return '7';if(/^aug/.test(q))return 'aug';return ''}
@@ -590,6 +592,7 @@ function syncPanel(){
   $('#ccV').textContent=`${st.cc} ms`;document.body.classList.toggle('nodg',!st.diag);
   $('#bAuto').classList.toggle('on',st.auto);$('#bClick').classList.toggle('on',st.click);$('#aLoop').setAttribute('aria-pressed',st.loop);
   $('#rate').value=String(st.rate);$('#rate2').value=String(st.rate);$('#oClick').checked=st.click;
+  $('#presets').innerHTML=(song.vids||[]).map(x=>`<button data-v="${x.id}" style="${vs().vid===x.id?'background:var(--or);color:#111;font-weight:700':''}">${esc(x.l)}</button>`).join('');
   const v=vs();$('#offV').textContent=v.off==null?'未設定':v.off.toFixed(2)+'秒';$('#url').value=v.vid?'https://youtu.be/'+v.vid:'';
 }
 $('#bSet').onclick=()=>$('#pn').classList.contains('open')?closePanel():openPanel('disp');
@@ -620,6 +623,8 @@ $('#markN').onclick=()=>{
 };
 $('#offM').onclick=()=>{vs().off=(vs().off??0)-.05;save();syncPanel()};
 $('#offP').onclick=()=>{vs().off=(vs().off??0)+.05;save();syncPanel()};
+function useVid(id){const v=vs();if(v.vid!==id){v.vid=id;v.off=null;v.bpm=song.bpm}save();syncPanel();cueVideo();sMsg('読み込みました。①で1小節目を合わせてください')}
+$('#presets').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(b)useVid(b.dataset.v)});
 $('#load').onclick=()=>{const id=ytId($('#url').value);if(!id){sMsg('URLからYouTubeの動画が見つかりませんでした');return}const v=vs();if(v.vid!==id){v.vid=id;v.off=null;v.bpm=song.bpm}save();syncPanel();cueVideo();sMsg('読み込みました。①で1小節目を合わせてください')};
 
 /* 編集 */
