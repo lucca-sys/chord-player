@@ -7,6 +7,7 @@
 <title>コード練習</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>
 <style>
 :root{--bg:#111317;--card:#1a1d23;--card2:#20242b;--line:#2b3038;--ink:#eceef2;--mut:#8b919c;--or:#ff7a2f;--or2:#a4502a;--gr:#5fd39b;--grbg:#5fd39b;--stick:120px}
 *{box-sizing:border-box;min-width:0}
@@ -43,7 +44,7 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .ab[aria-pressed=true]{border-color:var(--or);color:var(--or)}
 /* columns */
 .cols{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:28px;align-items:start}
-.left{position:sticky;top:12px;display:grid;gap:14px}
+.left{position:sticky;top:12px;display:grid;gap:14px;max-height:calc(100vh - 110px);overflow-y:auto;scrollbar-width:thin}
 .vid{position:relative;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden}
 .vid iframe,#yt{position:absolute;inset:0;width:100%;height:100%;border:0}
 .vmsg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px;color:var(--mut);font-size:13px}
@@ -75,6 +76,10 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .st.big i.c{background:var(--or);color:#111;opacity:1}
 .rhl{font-size:11px;color:var(--mut);margin-bottom:8px}.rhl i{font-style:normal;opacity:.4}
 .nostrum .rh,.nostrum .rhl{display:none}
+.score{background:#f3eee5;border-radius:8px;margin:2px 0 10px;overflow:hidden;min-height:20px}
+.score svg{display:block;width:100%;height:auto}
+.score .sm{font-size:11px;color:#6b6257;padding:6px 10px}
+.noscore .score{display:none}
 /* sheet */
 .sh{display:flex;align-items:center;gap:12px;margin:6px 0 10px}
 .sh h2{margin:0;font-size:14px;white-space:nowrap}
@@ -145,7 +150,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
 .msg{font-size:13px;color:var(--gr)}
 @media(max-width:900px){
   .cols{grid-template-columns:minmax(0,1fr);gap:12px}
-  .left{position:sticky;top:0;z-index:5;background:var(--bg);margin:0 calc(-1*max(3vw,14px));padding:0 0 8px;gap:0}
+  .left{position:sticky;top:0;z-index:5;max-height:none;overflow:visible;background:var(--bg);margin:0 calc(-1*max(3vw,14px));padding:0 0 8px;gap:0}
   .vid{border-radius:0}
   .cur{border-radius:0;border-width:0 0 1px;padding:10px 16px 10px}
   .big{font-size:40px}.nx{font-size:22px}
@@ -170,6 +175,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
   .pn{bottom:calc(76px + env(safe-area-inset-bottom))}
   .c4{display:none}
+  .dgs svg{max-height:72px}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
@@ -207,6 +213,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
         <div class="c3"><span id="pos">—</span><div class="pb" id="pb"></div></div>
         <div class="rh" id="rhBox"><span>右手</span><div class="st big" id="rh"></div></div>
         <div class="rhl" id="rhl">↓ダウン ↑アップ　<i class="g">↓↑</i>＝空振り（手だけ振る）　·＝のばす</div>
+        <div class="score" id="score" aria-label="今の小節の楽譜"></div>
         <div class="c4"><span>今のキー</span><b id="nowKey"></b></div>
         <div class="dgs"><figure><figcaption>押さえ方（今）</figcaption><div id="dNow"></div></figure><figure><figcaption>次</figcaption><div id="dNext"></div></figure></div>
       </div>
@@ -243,6 +250,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
     <label class="ck"><input type="checkbox" id="oColor">音名で色分け</label>
     <label class="ck"><input type="checkbox" id="oBig">小節を大きく（1行2小節）</label>
     <label class="ck"><input type="checkbox" id="oDiag">押さえ方の図を出す</label>
+    <label class="ck"><input type="checkbox" id="oScore">五線譜を出す（お試し）</label>
     <label class="ck"><input type="checkbox" id="oStrum">右手のストローク（↓↑）を出す</label>
     <div class="row"><span>速度</span><select id="rate2" aria-label="速度" style="background:#22262d;border:1px solid var(--line);border-radius:8px;min-height:38px;padding:0 8px;font-size:15px"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option></select></div>
     <label class="ck"><input type="checkbox" id="oClick">クリック音を鳴らす</label>
@@ -379,7 +387,7 @@ const HUE=[22,40,55,78,105,150,182,212,238,262,292,338];
 const RX=/^([A-G](?:#|b)?)([^/]*)(?:\/([A-G](?:#|b)?))?$/;
 
 /* ---------- 状態 ---------- */
-const st={song:'mari',strum:true,disp:'name',color:true,big:false,diag:true,cc:0,click:false,auto:true,loop:false,rate:1,opt:{},v:{}};
+const st={song:'mari',score:true,strum:true,disp:'name',color:true,big:false,diag:true,cc:0,click:false,auto:true,loop:false,rate:1,opt:{},v:{}};
 try{Object.assign(st,JSON.parse(localStorage.getItem('ct2')||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem('ct2',JSON.stringify(st))}catch(e){}};
 let song,S,CHG=[],cards=[];
@@ -466,6 +474,47 @@ function parse(txt){
 function patOf(i){const b=S.bars[i],s=S.secs[b.si];if(!s.pat||!s.pat.length)return null;const p=s.pat[(i-s.from)%s.pat.length];return (p+'--------').slice(0,b.beats*2)}
 const AR={D:['↓',''],U:['↑',''],d:['↓','g'],u:['↑','g'],X:['×','x'],'-':['·','h']};
 const stHtml=p=>[...p].map(ch=>{const a=AR[ch]||AR['-'];return `<i class="${a[1]}">${a[0]}</i>`}).join('');
+/* ---------- 五線譜（VexFlow） ---------- */
+const OPEN=[40,45,50,55,59,64],FLATK=new Set([5,10,3,8,1,6]);
+const SH=['c','c#','d','d#','e','f','f#','g','g#','a','a#','b'],FL=['c','db','d','eb','e','f','gb','g','ab','a','bb','b'];
+function pitches(c){const s=c&&c.r!=null&&shape(c);if(!s)return null;const cp=opt().capo||0,flat=FLATK.has((PC[song.ref]+opt().tr+120)%12);
+  const ms=[...new Set(s.f.map((f,i)=>f<0?null:OPEN[i]+f+cp+12).filter(x=>x!=null))].sort((a,b)=>a-b);
+  return ms.map(m=>`${(flat?FL:SH)[m%12]}/${Math.floor(m/12)-1}`)}
+function barEvents(bi){
+  const b=S.bars[bi],n8=b.beats*2,p=patOf(bi),at=k=>conv(b.toks[Math.min(b.toks.length-1,Math.floor(k/2/(b.beats/b.toks.length)))]);
+  const ev=[];
+  if(p&&st.strum){let cur=null;for(let k=0;k<n8;k++){const ch=p[k];if('DUX'.includes(ch)){cur={pos:k,len:1,c:ch==='X'?'X':at(k)};ev.push(cur)}else if(cur)cur.len++;else{cur={pos:k,len:1,c:null};ev.push(cur)}}}
+  else{let k=0;segs(b).forEach(g=>{const l=Math.round(g.w*2);ev.push({pos:k,len:l,c:g.c});k+=l})}
+  return ev;
+}
+const DUR={1:'8',2:'q',3:'qd',4:'h',6:'hd',8:'w'};
+function splitLen(l){const out=[];for(const s of [8,6,4,3,2,1])while(l>=s){out.push(s);l-=s}return out}
+function drawScore(bi,e8){
+  const el=$('#score');
+  if(!window.Vex){el.innerHTML='<div class="sm">楽譜の部品を読み込めませんでした</div>';return}
+  const VF=Vex.Flow,b=S.bars[bi],W=380,H=112;el.innerHTML='';
+  try{
+  const r=new VF.Renderer(el,VF.Renderer.Backends.SVG);r.resize(W,H);const ctx=r.getContext();
+  const keySpec=NAMES[(PC[song.ref]+opt().tr+120)%12];
+  const stave=new VF.Stave(4,6,W-8,{space_above_staff_ln:2,space_below_staff_ln:2});stave.addClef('treble','default','8vb').addKeySignature(keySpec).addTimeSignature(`${b.beats}/4`);stave.setContext(ctx).draw();
+  const notes=[],ties=[];
+  barEvents(bi).forEach(ev=>{
+    const keys=ev.c==='X'?['b/4/x2']:pitches(ev.c),on=e8>=ev.pos&&e8<ev.pos+ev.len;let prev=null;
+    splitLen(ev.len).forEach(l=>{
+      const d=DUR[l],n=new VF.StaveNote(Object.assign({keys:keys||['b/4'],duration:d,auto_stem:true,clef:'treble'},keys?{}:{type:'r'}));
+      if(d.endsWith('d'))VF.Dot.buildAndAttach([n],{all:true});
+      if(on)n.setStyle({fillStyle:'#e8641c',strokeStyle:'#e8641c'});
+      if(prev&&keys&&ev.c!=='X')ties.push(new VF.StaveTie({first_note:prev,last_note:n,first_indices:keys.map((_,i)=>i),last_indices:keys.map((_,i)=>i)}));
+      prev=n;notes.push(n)})
+  });
+  const voice=new VF.Voice({num_beats:b.beats,beat_value:4}).setStrict(false).addTickables(notes);
+  VF.Accidental.applyAccidentals([voice],keySpec);
+  new VF.Formatter().joinVoices([voice]).format([voice],stave.getNoteEndX()-stave.getNoteStartX()-14);
+  const beams=VF.Beam.generateBeams(notes);
+  voice.draw(ctx,stave);beams.forEach(x=>x.setContext(ctx).draw());ties.forEach(x=>x.setContext(ctx).draw());
+  const svg=el.querySelector('svg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.removeAttribute('width');svg.removeAttribute('height');svg.style.width='100%';svg.style.height='auto';
+  }catch(err){el.innerHTML='<div class="sm">この小節は楽譜にできませんでした</div>'}
+}
 function segs(bar){const out=[],w=bar.beats/bar.toks.length;bar.toks.forEach((t,j)=>{const c=conv(t),l=out[out.length-1];if(l&&l.c.n===c.n)l.w+=w;else out.push({c,w,at:bar.start+j*w})});return out}
 function buildChanges(){CHG=[];S.bars.forEach((b,i)=>segs(b).forEach(s=>{if(!CHG.length||CHG[CHG.length-1].c.n!==s.c.n)CHG.push({c:s.c,b:s.at,bar:i})}))}
 const barAt=b=>{let lo=0,hi=S.bars.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(S.bars[m].start<=b)lo=m;else hi=m-1}return lo};
@@ -605,6 +654,7 @@ function render(b){
     const cc=cards[bi];if(cc&&!pre){cc.querySelectorAll('.st i.c').forEach(x=>x.classList.remove('c'));const t=cc.querySelectorAll('.st i')[e8];t&&t.classList.add('c')}
     last.e8=e8;
   }
+  if(st.score){const sk=bi+'|'+(pre?-1:e8)+'|'+st.strum;if(sk!==last.sc){last.sc=sk;drawScore(bi,pre?-1:e8)}}
   if(bi!==last.bi||beat!==last.beat||pre!==last.pre){
     const nb=bar.beats;
     $('#pos').textContent=pre?`はじまりまで ${Math.ceil(-b)} 拍`:`${bi+1} 小節 · ${beat+1}/${nb} 拍`;
@@ -631,7 +681,7 @@ function closePanel(){$('#pn').classList.remove('open');$('#bSet').classList.rem
 function syncPanel(){
   const o=opt();$('#trV').textContent=(o.tr>0?'+':'')+o.tr;
   $$('#disp button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.d===st.disp));
-  $('#oSimple').checked=!!o.simple;$('#oPower').checked=!!o.power;$('#oColor').checked=st.color;$('#oBig').checked=st.big;$('#oDiag').checked=st.diag;$('#oStrum').checked=st.strum;document.body.classList.toggle('nostrum',!st.strum);
+  $('#oSimple').checked=!!o.simple;$('#oPower').checked=!!o.power;$('#oColor').checked=st.color;$('#oBig').checked=st.big;$('#oDiag').checked=st.diag;$('#oStrum').checked=st.strum;$('#oScore').checked=st.score;document.body.classList.toggle('noscore',!st.score);document.body.classList.toggle('nostrum',!st.strum);
   $('#ccV').textContent=`${st.cc} ms`;document.body.classList.toggle('nodg',!st.diag);
   $('#bAuto').classList.toggle('on',st.auto);$('#bClick').classList.toggle('on',st.click);$('#aLoop').setAttribute('aria-pressed',st.loop);
   $('#rate').value=String(st.rate);$('#rate2').value=String(st.rate);$('#oClick').checked=st.click;
@@ -651,6 +701,7 @@ $('#oSimple').onchange=e=>{opt().simple=e.target.checked;if(e.target.checked)opt
 $('#oPower').onchange=e=>{opt().power=e.target.checked;if(e.target.checked)opt().simple=false;syncPanel();rerender()};
 $('#oColor').onchange=e=>{st.color=e.target.checked;rerender()};
 $('#oBig').onchange=e=>{st.big=e.target.checked;rerender()};
+$('#oScore').onchange=e=>{st.score=e.target.checked;last.sc=null;syncPanel();save()};
 $('#oStrum').onchange=e=>{st.strum=e.target.checked;syncPanel();rerender()};
 $('#oDiag').onchange=e=>{st.diag=e.target.checked;last.key=null;syncPanel();save()};
 $('#ccM').onclick=()=>{st.cc-=10;syncPanel();save()};$('#ccP').onclick=()=>{st.cc+=10;syncPanel();save()};
