@@ -65,6 +65,16 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .dgs figcaption{font-size:11px;color:#cbbba8;padding:0 4px}
 .dgs svg{display:block;width:100%;height:auto}
 .nodg .dgs{display:none}
+.st{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));text-align:center;font-size:14px;line-height:1;color:#d6dae1;font-style:normal}
+.st i{font-style:normal;padding:2px 0;border-radius:3px}
+.st i.g{opacity:.28}.st i.h{opacity:.25}.st i.x{color:#9aa1ab}
+.bc.on .st i.c{background:var(--or);color:#111;opacity:1}
+.rh{display:flex;align-items:center;gap:12px;margin:2px 0 4px}
+.rh>span{font-size:12px;color:var(--mut);white-space:nowrap}
+.st.big{flex:1;font-size:22px;font-weight:700}
+.st.big i.c{background:var(--or);color:#111;opacity:1}
+.rhl{font-size:11px;color:var(--mut);margin-bottom:8px}.rhl i{font-style:normal;opacity:.4}
+.nostrum .rh,.nostrum .rhl{display:none}
 /* sheet */
 .sh{display:flex;align-items:center;gap:12px;margin:6px 0 10px}
 .sh h2{margin:0;font-size:14px;white-space:nowrap}
@@ -195,6 +205,8 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
         <div class="c1"><span>現在</span><span>次</span></div>
         <div class="c2"><div class="big cn" id="now">—</div><div class="nx cn" id="next">—</div></div>
         <div class="c3"><span id="pos">—</span><div class="pb" id="pb"></div></div>
+        <div class="rh" id="rhBox"><span>右手</span><div class="st big" id="rh"></div></div>
+        <div class="rhl" id="rhl">↓ダウン ↑アップ　<i class="g">↓↑</i>＝空振り（手だけ振る）　·＝のばす</div>
         <div class="c4"><span>今のキー</span><b id="nowKey"></b></div>
         <div class="dgs"><figure><figcaption>押さえ方（今）</figcaption><div id="dNow"></div></figure><figure><figcaption>次</figcaption><div id="dNext"></div></figure></div>
       </div>
@@ -231,6 +243,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
     <label class="ck"><input type="checkbox" id="oColor">音名で色分け</label>
     <label class="ck"><input type="checkbox" id="oBig">小節を大きく（1行2小節）</label>
     <label class="ck"><input type="checkbox" id="oDiag">押さえ方の図を出す</label>
+    <label class="ck"><input type="checkbox" id="oStrum">右手のストローク（↓↑）を出す</label>
     <div class="row"><span>速度</span><select id="rate2" aria-label="速度" style="background:#22262d;border:1px solid var(--line);border-radius:8px;min-height:38px;padding:0 8px;font-size:15px"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option></select></div>
     <label class="ck"><input type="checkbox" id="oClick">クリック音を鳴らす</label>
     <div class="row"><span>クリックの補正</span><div class="step"><button id="ccM" aria-label="早める">−</button><b class="cn" id="ccV">0 ms</b><button id="ccP" aria-label="遅らせる">+</button></div></div>
@@ -248,7 +261,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
     <div class="urlr"><input id="url" type="url" inputmode="url" placeholder="https://youtu.be/…" aria-label="YouTubeのURL"><button id="load">読み込む</button></div>
   </div>
   <div data-p="edit" class="pb2 sy" hidden>
-    <p><code>[セクション名]</code> の下に小節を <code>|</code> で区切って書きます。1小節にコード2つで2拍ずつ、<code>Em Em Em F</code> なら3拍＋1拍。2拍の小節は頭に <code>2:</code>。保存はこの端末のブラウザだけです。</p>
+    <p><code>[セクション名]</code> の下に小節を <code>|</code> で区切って書きます。1小節にコード2つで2拍ずつ、<code>Em Em Em F</code> なら3拍＋1拍。2拍の小節は頭に <code>2:</code>。右手は <code>@ DuDUdUDU</code> のように8分音符8つで書きます（D=ダウン U=アップ 小文字=空振り X=ブラッシング -=のばす。並べると小節ごとに順番に使います）。保存はこの端末のブラウザだけです。</p>
     <textarea id="ed" spellcheck="false" aria-label="コード譜"></textarea>
     <div class="edb"><button id="save">保存して反映</button><button id="reset">最初の譜面に戻す</button><span class="msg" id="edMsg"></span></div>
   </div>
@@ -265,6 +278,7 @@ C | D | Em | Em
 C | D | Bm | Em D
 Am | Bm | Em | Em`;
 const RIFF='Em | Em Em Em F | Em | Em Em Em F';
+const P8='@ DDDDDDDD',PR='@ DD--DD-- DD--D-D-',PM='@ DuDUdUDU';
 const B_L=`Em | Em | Em | Em\n${RIFF}\nEm | Em | Em | Em\n${RIFF}`;
 const C_L=`C | D | Bm | Em D
 C | D | Em | D
@@ -274,54 +288,71 @@ const SOLO=Array(6).fill('Em Em F Dm | Em Em F Dm | Em Em F Dm | Em Em F Dm').jo
 const SONGS={
  mari:{title:'マリーゴールド',artist:'あいみょん',bpm:106,key:'D',mode:'major',ref:'D',ts:'4/4',mods:0,vid:'0xSiBpUdW4E',vids:[{l:'公式MV',id:'0xSiBpUdW4E'}],def:{simple:true,power:false},
   text:`[イントロ]
+${PM}
 Dadd9 Dadd9 DM7 D | Dadd9 Dadd9 DM7 D | Dadd9 Dadd9 DM7 D
 D | A/C# | Bm7 | F#m
 GM7 D/F# | GM7 Gsus2/A
 [Aメロ]
+${PM}
 D | A/C# | Bm7 | A
 G | D/F# | G | Asus4 A
 D | A/C# | Bm7 | A
 G | D/F# | G | Asus4 A
 [Bメロ]
+${PM}
 Bm7 | D/F# | G | A | A
 [サビ]
+${PM}
 D | A/C# | Bm7 | Asus4 A
 G | D/F# Bm7 | G | A
 D | A/C# | Bm7 | Asus4 A
 G | D/F# Bm7 | G | A
 [間奏]
+${PM}
 D | A`},
  lazy:{title:'Don’t say “lazy”',artist:'桜高軽音部',bpm:181,key:'E',mode:'minor',ref:'G',ts:'4/4',mods:0,vid:'5CSNv9MNEC4',vids:[{l:'原曲（ポニーキャニオン公式）',id:'5CSNv9MNEC4'},{l:'オフボーカル（歌なし）',id:'AgW5PaQ6LMY'}],def:{simple:false,power:true},
   text:`[イントロ]
 N.C.
 [Aメロ]
+${P8}
 ${A_L}
 [リフ]
+${PR}
 ${RIFF}
 ${RIFF}
 [Bメロ]
+${P8}
 ${B_L}
 [サビ]
+${P8}
 ${C_L}
 [Aメロ]
+${P8}
 ${A_L}
 [リフ]
+${PR}
 ${RIFF}
 ${RIFF}
 [Bメロ]
+${P8}
 ${B_L}
 [サビ]
+${P8}
 ${C_L}
 [ソロ]
+${P8}
 ${SOLO}
 [ラストサビ]
+${P8}
 C | D | Bm | Em D
 C | D | Em | D
 C | D | Bm | Em D
 Am | A#dim | B | 2: B
 [Aメロ]
+${P8}
 ${A_L}
 [アウトロ]
+${PR}
 ${RIFF}
 Em | Em Em Em F | Em | Em Em N.C. N.C.`}
 };
@@ -348,7 +379,7 @@ const HUE=[22,40,55,78,105,150,182,212,238,262,292,338];
 const RX=/^([A-G](?:#|b)?)([^/]*)(?:\/([A-G](?:#|b)?))?$/;
 
 /* ---------- 状態 ---------- */
-const st={song:'mari',disp:'name',color:true,big:false,diag:true,cc:0,click:false,auto:true,loop:false,rate:1,opt:{},v:{}};
+const st={song:'mari',strum:true,disp:'name',color:true,big:false,diag:true,cc:0,click:false,auto:true,loop:false,rate:1,opt:{},v:{}};
 try{Object.assign(st,JSON.parse(localStorage.getItem('ct2')||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem('ct2',JSON.stringify(st))}catch(e){}};
 let song,S,CHG=[],cards=[];
@@ -424,6 +455,7 @@ function parse(txt){
     const m=line.match(/^\[(.+)\]$/);
     if(m){cur={name:m[1],from:bars.length};secs.push(cur);return}
     if(!cur){cur={name:'',from:bars.length};secs.push(cur)}
+    if(line[0]==='@'){cur.pat=line.slice(1).trim().split(/\s+/).filter(Boolean);return}
     line.split('|').forEach(b=>{b=b.trim();if(!b)return;let beats=4;const bm=b.match(/^(\d)\s*:\s*(.*)$/);if(bm){beats=Math.max(1,+bm[1]);b=bm[2]}
       const toks=b.split(/\s+/).filter(Boolean);if(toks.length)bars.push({si:secs.length-1,beats,toks})});
   });
@@ -431,6 +463,9 @@ function parse(txt){
   secs.forEach((s,i)=>{s.to=i+1<secs.length?secs[i+1].from:bars.length;s.sb=bars[s.from]?bars[s.from].start:t;s.eb=s.to>s.from?bars[s.to-1].start+bars[s.to-1].beats:s.sb});
   return {bars,secs:secs,total:t};
 }
+function patOf(i){const b=S.bars[i],s=S.secs[b.si];if(!s.pat||!s.pat.length)return null;const p=s.pat[(i-s.from)%s.pat.length];return (p+'--------').slice(0,b.beats*2)}
+const AR={D:['↓',''],U:['↑',''],d:['↓','g'],u:['↑','g'],X:['×','x'],'-':['·','h']};
+const stHtml=p=>[...p].map(ch=>{const a=AR[ch]||AR['-'];return `<i class="${a[1]}">${a[0]}</i>`}).join('');
 function segs(bar){const out=[],w=bar.beats/bar.toks.length;bar.toks.forEach((t,j)=>{const c=conv(t),l=out[out.length-1];if(l&&l.c.n===c.n)l.w+=w;else out.push({c,w,at:bar.start+j*w})});return out}
 function buildChanges(){CHG=[];S.bars.forEach((b,i)=>segs(b).forEach(s=>{if(!CHG.length||CHG[CHG.length-1].c.n!==s.c.n)CHG.push({c:s.c,b:s.at,bar:i})}))}
 const barAt=b=>{let lo=0,hi=S.bars.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(S.bars[m].start<=b)lo=m;else hi=m-1}return lo};
@@ -446,7 +481,7 @@ function renderSheet(){
     for(let i=s.from;i<s.to;i++){const b=S.bars[i];
       h+=`<button class="bc" data-i="${i}" aria-label="${i+1}小節目から再生"><span class="bn">${i+1}</span>${i===0?`<span class="ts">${song.ts}</span>`:''}<div class="cg cn" style="--n:${b.beats}">`+
         segs(b).map(g=>`<div class="sg" style="grid-column:span ${Math.max(1,Math.round(g.w))}">${chtml(g.c)}</div>`).join('')+
-        `</div><div class="bt">${'<i></i>'.repeat(b.beats)}</div></button>`}
+        `</div>${st.strum&&patOf(i)?`<div class="st" style="--n:${b.beats*2}">${stHtml(patOf(i))}</div>`:''}<div class="bt">${'<i></i>'.repeat(b.beats)}</div></button>`}
     h+='</div>';
   });
   $('#sheet').innerHTML=h;
@@ -562,6 +597,14 @@ function render(b){
   if(key!==last.key){last.key=key;
     $('#now').innerHTML=cn?chtml(cn):'—';$('#next').innerHTML=nn?chtml(nn):'';
     if(st.diag){$('#dNow').innerHTML=diag(cn||nn,true);$('#dNext').innerHTML=diag(nn,false)}}
+  const e8=pre?-1:Math.floor((bb-bar.start)*2);
+  if(st.strum&&(bi!==last.bi||e8!==last.e8||pre!==last.pre)){
+    const p=patOf(bi);$('#rhBox').style.visibility=p?'visible':'hidden';
+    if(p){$('#rh').style.setProperty('--n',p.length);$('#rh').innerHTML=stHtml(p);if(e8>=0&&$('#rh').children[e8])$('#rh').children[e8].classList.add('c')}
+    if(last.bi>=0&&cards[last.bi])cards[last.bi].querySelectorAll('.st i.c').forEach(x=>x.classList.remove('c'));
+    const cc=cards[bi];if(cc&&!pre){cc.querySelectorAll('.st i.c').forEach(x=>x.classList.remove('c'));const t=cc.querySelectorAll('.st i')[e8];t&&t.classList.add('c')}
+    last.e8=e8;
+  }
   if(bi!==last.bi||beat!==last.beat||pre!==last.pre){
     const nb=bar.beats;
     $('#pos').textContent=pre?`はじまりまで ${Math.ceil(-b)} 拍`:`${bi+1} 小節 · ${beat+1}/${nb} 拍`;
@@ -588,7 +631,7 @@ function closePanel(){$('#pn').classList.remove('open');$('#bSet').classList.rem
 function syncPanel(){
   const o=opt();$('#trV').textContent=(o.tr>0?'+':'')+o.tr;
   $$('#disp button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.d===st.disp));
-  $('#oSimple').checked=!!o.simple;$('#oPower').checked=!!o.power;$('#oColor').checked=st.color;$('#oBig').checked=st.big;$('#oDiag').checked=st.diag;
+  $('#oSimple').checked=!!o.simple;$('#oPower').checked=!!o.power;$('#oColor').checked=st.color;$('#oBig').checked=st.big;$('#oDiag').checked=st.diag;$('#oStrum').checked=st.strum;document.body.classList.toggle('nostrum',!st.strum);
   $('#ccV').textContent=`${st.cc} ms`;document.body.classList.toggle('nodg',!st.diag);
   $('#bAuto').classList.toggle('on',st.auto);$('#bClick').classList.toggle('on',st.click);$('#aLoop').setAttribute('aria-pressed',st.loop);
   $('#rate').value=String(st.rate);$('#rate2').value=String(st.rate);$('#oClick').checked=st.click;
@@ -608,6 +651,7 @@ $('#oSimple').onchange=e=>{opt().simple=e.target.checked;if(e.target.checked)opt
 $('#oPower').onchange=e=>{opt().power=e.target.checked;if(e.target.checked)opt().simple=false;syncPanel();rerender()};
 $('#oColor').onchange=e=>{st.color=e.target.checked;rerender()};
 $('#oBig').onchange=e=>{st.big=e.target.checked;rerender()};
+$('#oStrum').onchange=e=>{st.strum=e.target.checked;syncPanel();rerender()};
 $('#oDiag').onchange=e=>{st.diag=e.target.checked;last.key=null;syncPanel();save()};
 $('#ccM').onclick=()=>{st.cc-=10;syncPanel();save()};$('#ccP').onclick=()=>{st.cc+=10;syncPanel();save()};
 
