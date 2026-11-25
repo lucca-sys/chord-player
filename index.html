@@ -170,6 +170,8 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .ck input{width:18px;height:18px;accent-color:var(--or)}
 .sy{display:grid;gap:10px}
 .sy p{margin:0;font-size:13px;color:var(--mut)}
+.sy p.autoP{color:var(--ink);background:var(--grbg);border:1px solid var(--gr);border-radius:8px;padding:8px 10px}.sy p.autoP:empty{display:none}
+.lnk{background:none;border:0;color:var(--or);text-decoration:underline;font-size:13px;padding:0 0 0 6px;cursor:pointer;min-height:0}
 .bigbtn{min-height:48px;border-radius:10px;background:var(--or);color:#111;font-weight:700;font-size:15px}
 .bigbtn.sub{background:#2b2f37;color:var(--ink)}
 .urlr{display:flex;gap:6px}
@@ -363,6 +365,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
     <div class="row"><span>クリックの補正</span><div class="step"><button id="ccM" aria-label="早める">−</button><b class="cn" id="ccV">0 ms</b><button id="ccP" aria-label="遅らせる">+</button></div></div>
   </div>
   <div data-p="sync" class="pb2 sy" hidden>
+    <p class="autoP" id="autoP"></p>
     <p>① 動画を再生して、曲の最初の音（1小節目の頭）でこのボタンを押す</p>
     <button class="bigbtn" id="mark1">ここが1小節目の頭</button>
     <p>② 途中でずれたら、オレンジ枠の小節の頭で押す（テンポも自動で直ります）</p>
@@ -398,7 +401,12 @@ const C_L=`C | D | Bm | Em D
 C | D | Em | Em D
 C | D | Bm | Em D
 Am | A#dim | B | B`;
-const SOLO=Array(5).fill('Em Em Em F F Dm Dm Dm | Dm Em Em F F Dm Dm Dm | Em Em Em F F Dm Dm Dm | Dm Em Em F F Dm Dm Dm').join('\n')+'\nEm Em Em F F Dm Dm Dm | Dm Em Em F F Dm Dm Dm | Em Em Em F F Dm Dm Dm | N.C. Em Em F F Dm Dm Dm';
+const SOLO=`B5 | B5 | B5 | B5 B5 D5 D5
+B5 | B5 B5 D5 D5 | B5 | B5 B5 D5 D5
+B5 | B5 B5 D5 D5 | B5 | B5 B5 D5 D5
+B5 | B5 B5 D5 D5 | B5 | B5 B5 D5 D5
+B5 | B5 B5 D5 D5 | B5 | B5 B5 D5 D5
+B5 | B5 B5 D5 D5 | B5 | B5 B5 D5 D5`;
 const SONGS={
  mari:{title:'マリーゴールド',artist:'あいみょん',bpm:106,key:'D',mode:'major',ref:'D',ts:'4/4',mods:0,vid:'0xSiBpUdW4E',vids:[{l:'公式MV',id:'0xSiBpUdW4E'}],def:{simple:true,power:false},
   text:`[イントロ]
@@ -496,14 +504,14 @@ ${C_L}
 ${PL}
 ${A_L}
 [間奏（ソロ）]
-${PL}
+@ DDDDDDDD
 ${SOLO}
 [Bメロ]
 ${PL}
 C | D | Bm | Em D
-C | D | Em | D
+C | D | Em | Em D
 C | D | Bm | Em D
-Am | A#dim | B | 2: B
+Am | A#dim | B | B | 2: B
 [ラストサビ]
 ${PL}
 ${A_L}
@@ -571,13 +579,14 @@ ${rep(CG_V,8)}
 ${rep(CG_C,4)}
 [Cメロ]
 @ L
-${rep(CG_C,2)}
+${CG_C}
+G#m7 G#m7 F#m7 F#m7 | F#m7 | B7 B7 C#m7 C#m7 | D#7sus4
 [サビ]
 @ L
 ${rep(CG_C,4)}
 [アウトロ]
 @ L
-${rep(CG_C,4)}`};
+${rep(CG_C,3)}`};
 const IL_A='C#m7 | F#7 | B7sus4 | E',IL_B=`AM7 | G#7 | C#m7 | F#7
 B7sus4 | B7sus4 | E | E E E G#7`;
 SONGS.lovely={title:'Isn’t She Lovely',artist:'Stevie Wonder',bpm:119,key:'E',mode:'major',ref:'E',ts:'4/4',mods:0,vid:'oE56g61mW44',vids:[{l:'公式音源（3分20秒の短い版）',id:'oE56g61mW44'}],def:{simple:true,power:false},
@@ -640,7 +649,10 @@ try{Object.assign(st,JSON.parse(localStorage.getItem('ct2')||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem('ct2',JSON.stringify(st))}catch(e){}};
 let song,S,CHG=[],cards=[];
 const opt=()=>st.opt[st.song]||(st.opt[st.song]={...SONGS[st.song].def,tr:0});
-const vs=()=>{const v=st.v[st.song]||(st.v[st.song]={vid:SONGS[st.song].vid,off:null,bpm:SONGS[st.song].bpm});if(!v.vid&&SONGS[st.song].vid)v.vid=SONGS[st.song].vid;return v};
+// 動画ごとの自動合わせ（YouTubeの音声を解析して測った、1小節目の頭の秒数とテンポ）
+const SYNC={'0xSiBpUdW4E':{off:.70,bpm:106},'5CSNv9MNEC4':{off:.44,bpm:181},'dLl4PZtxia8':{off:.32,bpm:73.64},'D-NvQ6VJYtE':{off:4.81,bpm:119.46,map:[[0,4.81],[328,169.558],[352,181.493],[384,197.426],[408,209.441],[440,225.514],[456,233.478]]},'oE56g61mW44':{off:.31,bpm:118.79}};
+const vs=()=>{const so=SONGS[st.song];const v=st.v[st.song]||(st.v[st.song]={vid:so.vid,off:null,bpm:so.bpm});if(!v.vid&&so.vid)v.vid=so.vid;
+ if(v.off==null&&SYNC[v.vid]){v.off=SYNC[v.vid].off;v.bpm=SYNC[v.vid].bpm;v.auto=1}return v};
 const getText=id=>{try{return localStorage.getItem('ct2-'+id)||SONGS[id].text}catch(e){return SONGS[id].text}};
 
 function simpQ(q){if(q==='5')return '5';if(/^m7/.test(q))return 'm7';if(/^m/.test(q))return 'm';if(/^dim/.test(q))return 'dim';if(/^7/.test(q))return '7';if(/^aug/.test(q))return 'aug';return ''}
@@ -682,8 +694,8 @@ function shape(c){
     if(a===0)return {f:[-1,0,2,2,-1,-1],g:[0,0,1,1,0,0]};
     return e<=7?{f:[e,e+2,e+2,-1,-1,-1],g:[1,3,4,0,0,0]}:{f:[-1,a,a+2,a+2,-1,-1],g:[0,1,3,4,0,0]};
   }
-  const E={'':[[0,2,2,1,0,0],[1,3,4,2,1,1]],'m':[[0,2,2,0,0,0],[1,3,4,1,1,1]],'7':[[0,2,0,1,0,0],[1,3,1,2,1,1]],'m7':[[0,2,0,0,0,0],[1,3,1,1,1,1]]};
-  const A={'':[[-1,0,2,2,2,0],[0,1,2,3,4,1]],'m':[[-1,0,2,2,1,0],[0,1,3,4,2,1]],'7':[[-1,0,2,0,2,0],[0,1,3,1,4,1]],'m7':[[-1,0,2,0,1,0],[0,1,3,1,2,1]]};
+  const E={'':[[0,2,2,1,0,0],[1,3,4,2,1,1]],'m':[[0,2,2,0,0,0],[1,3,4,1,1,1]],'7':[[0,2,0,1,0,0],[1,3,1,2,1,1]],'m7':[[0,2,0,0,0,0],[1,3,1,1,1,1]],'7sus4':[[0,2,0,2,0,0],[1,3,1,4,1,1]]};
+  const A={'':[[-1,0,2,2,2,0],[0,1,2,3,4,1]],'m':[[-1,0,2,2,1,0],[0,1,3,4,2,1]],'7':[[-1,0,2,0,2,0],[0,1,3,1,4,1]],'m7':[[-1,0,2,0,1,0],[0,1,3,1,2,1]],'7sus4':[[-1,0,2,0,3,0],[0,1,3,1,4,1]]};
   if(!E[c.q])return null;
   const useE=e>=1&&(a<1||e<=a),f=useE?e:a,[s,g]=(useE?E:A)[c.q];
   return {f:s.map(x=>x<0?-1:x+f),g,b:[f,useE?0:1,5]};
@@ -853,6 +865,10 @@ const src=()=>YTP&&ytOK&&vs().vid?'video':'clock';
 const bpm=()=>src()==='video'?(vs().bpm||song.bpm):song.bpm;
 const off=()=>src()==='video'?(vs().off??0):0;
 const spb=()=>60/bpm();
+// 動画の途中でテンポが揺れる曲用：自動合わせの「拍→秒」の対応表（区間ごとに直線でつなぐ）
+const vmap=()=>{if(src()!=='video')return null;const v=vs();return v.auto&&SYNC[v.vid]&&SYNC[v.vid].map||null};
+const t2b=t=>{const m=vmap();if(!m)return (t-off())/spb();let i=0;while(i<m.length-2&&t>m[i+1][1])i++;const a=m[i],c=m[i+1];return a[0]+(t-a[1])*(c[0]-a[0])/(c[1]-a[1])};
+const b2t=b=>{const m=vmap();if(!m)return off()+b*spb();let i=0;while(i<m.length-2&&b>m[i+1][0])i++;const a=m[i],c=m[i+1];return a[1]+(b-a[0])*(c[1]-a[1])/(c[0]-a[0])};
 const vState=()=>YTP&&YTP.getPlayerState?YTP.getPlayerState():-1;
 const playing=()=>src()==='video'?vState()===1:clock.play;
 function getT(){
@@ -860,7 +876,7 @@ function getT(){
   return clock.play?clock.base+(performance.now()-clock.p0)/1000*st.rate:clock.base;
 }
 function setT(t){if(src()==='video'){YTP.seekTo(Math.max(0,t),true);vLastT=Math.max(0,t);vLastP=performance.now()}else{clock.base=t;clock.p0=performance.now()}}
-function seekBeat(b){const pre=playing()?2:0;setT(off()+(b-pre)*spb());lockSec=-1;lastK=null}
+function seekBeat(b){const pre=playing()?2:0;setT(b2t(b-pre));lockSec=-1;lastK=null}
 function togglePlay(){
   initAudio();
   if(src()==='video'){vState()===1?YTP.pauseVideo():YTP.playVideo();return}
@@ -899,13 +915,13 @@ const fmt=s=>{s=Math.max(0,Math.floor(s));return `${Math.floor(s/60)}:${String(s
 function frame(){
   requestAnimationFrame(frame);
   if(!S||!S.bars.length)return;
-  const t=getT(),b=(t-off())/spb(),pl=playing();
+  const t=getT(),b=t2b(t),pl=playing();
   if(pl!==lastPlay){lastPlay=pl;$('#playIco').innerHTML=pl?'<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>':'<path d="M8 5l11 7-11 7z"/>';$('#bPlay').setAttribute('aria-label',pl?'一時停止':'再生')}
   if(pl&&st.click){const k=Math.floor(b+st.cc/1000/spb());if(lastK!==null&&k===lastK+1&&k<S.total)tick(k<0?(k+400)%4===0:STARTS.has(k));lastK=k}
-  if(pl&&st.loop&&b>=0){const si=S.bars[barAt(Math.min(b,S.total-.01))].si;if(lockSec<0)lockSec=si;const s=S.secs[lockSec];if(b>=s.eb||b<s.sb-4){setT(off()+(s.sb-2)*spb());lastK=null;return}}
+  if(pl&&st.loop&&b>=0){const si=S.bars[barAt(Math.min(b,S.total-.01))].si;if(lockSec<0)lockSec=si;const s=S.secs[lockSec];if(b>=s.eb||b<s.sb-4){setT(b2t(s.sb-2));lastK=null;return}}
   if(src()==='clock'&&pl&&b>=S.total+1){clock.play=false;clock.base=off()}
   render(b);
-  const dur=src()==='video'&&YTP.getDuration?YTP.getDuration():off()+S.total*spb();
+  const dur=src()==='video'&&YTP.getDuration?YTP.getDuration():b2t(S.total);
   $('#time').textContent=`${fmt(t)} / ${fmt(dur)}`;
   const p=Math.max(0,Math.min(1,b/S.total))*100;$('#tlh').style.left=`calc(${p}% - 1px)`;$('#tlf').style.width=p+'%';
 }
@@ -972,7 +988,7 @@ function syncPanel(){
   $('#bAuto').classList.toggle('on',st.auto);$('#bClick').classList.toggle('on',st.click);$('#aLoop').setAttribute('aria-pressed',st.loop);
   $('#rate').value=String(st.rate);$('#rate2').value=String(st.rate);$('#oClick').checked=st.click;
   $('#presets').innerHTML=(song.vids||[]).map(x=>`<button data-v="${x.id}" style="${vs().vid===x.id?'background:var(--or);color:#111;font-weight:700':''}">${esc(x.l)}</button>`).join('');
-  const v=vs();$('#offV').textContent=v.off==null?'未設定':v.off.toFixed(2)+'秒';$('#url').value=v.vid?'https://youtu.be/'+v.vid:'';
+  const v=vs();$('#offV').textContent=v.off==null?'未設定':v.off.toFixed(2)+'秒';{const a=SYNC[v.vid];$('#autoP').innerHTML=a?(v.auto?'✅ この動画は自動で合わせてあります（押さなくてOK）。ずれた時だけ①②で直してください':'手動で合わせ中。<button class="lnk" id="toAuto">自動の値に戻す</button>'):'';const b=$('#toAuto');if(b)b.onclick=()=>{v.off=a.off;v.bpm=a.bpm;v.auto=1;lockSec=-1;save();syncPanel();renderInfo();sMsg('自動の値に戻しました')}}$('#url').value=v.vid?'https://youtu.be/'+v.vid:'';
 }
 $('#bSet').onclick=()=>$('#pn').classList.contains('open')?closePanel():openPanel('disp');
 $('#pnX').onclick=closePanel;
@@ -995,19 +1011,19 @@ $('#ccM').onclick=()=>{st.cc-=10;syncPanel();save()};$('#ccP').onclick=()=>{st.c
 
 /* 合わせる */
 const sMsg=t=>$('#syncMsg').textContent=t;
-$('#mark1').onclick=()=>{if(src()!=='video'){sMsg('先に動画を読み込んでください');return}vs().off=getT();lockSec=-1;save();syncPanel();renderInfo();sMsg('1小節目を合わせました。ずれたら②のボタンで直せます')};
+$('#mark1').onclick=()=>{if(src()!=='video'){sMsg('先に動画を読み込んでください');return}vs().off=getT();vs().auto=0;lockSec=-1;save();syncPanel();renderInfo();sMsg('1小節目を合わせました。ずれたら②のボタンで直せます')};
 $('#markN').onclick=()=>{
   if(src()!=='video'){sMsg('先に動画を読み込んでください');return}
-  const v=vs(),t=getT();if(v.off==null){sMsg('先に①を押してください');return}
+  const v=vs(),t=getT();if(v.off==null){sMsg('先に①を押してください');return}v.auto=0;
   const b=(t-v.off)/spb(),bi=barAt(Math.max(0,b+0.5)),s0=S.bars[bi].start;
   if(s0>=16){v.bpm=s0*60/(t-v.off);sMsg(`${bi+1}小節目で合わせ直しました（テンポ ${v.bpm.toFixed(1)}）`)}else{v.off=t-s0*spb();sMsg(`${bi+1}小節目で合わせ直しました`)}
   save();syncPanel();renderInfo();
 };
-$('#offM').onclick=()=>{vs().off=(vs().off??0)-.05;save();syncPanel()};
-$('#offP').onclick=()=>{vs().off=(vs().off??0)+.05;save();syncPanel()};
-function useVid(id){const v=vs();if(v.vid!==id){v.vid=id;v.off=null;v.bpm=song.bpm}save();syncPanel();cueVideo();sMsg('読み込みました。①で1小節目を合わせてください')}
+$('#offM').onclick=()=>{vs().auto=0;vs().off=(vs().off??0)-.05;save();syncPanel()};
+$('#offP').onclick=()=>{vs().auto=0;vs().off=(vs().off??0)+.05;save();syncPanel()};
+function useVid(id){const v=vs();if(v.vid!==id){v.vid=id;v.off=null;v.bpm=song.bpm;vs()}save();syncPanel();cueVideo();sMsg(SYNC[id]?'読み込みました。この動画は自動で合わせてあります':'読み込みました。①で1小節目を合わせてください')}
 $('#presets').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(b)useVid(b.dataset.v)});
-$('#load').onclick=()=>{const id=ytId($('#url').value);if(!id){sMsg('URLからYouTubeの動画が見つかりませんでした');return}const v=vs();if(v.vid!==id){v.vid=id;v.off=null;v.bpm=song.bpm}save();syncPanel();cueVideo();sMsg('読み込みました。①で1小節目を合わせてください')};
+$('#load').onclick=()=>{const id=ytId($('#url').value);if(!id){sMsg('URLからYouTubeの動画が見つかりませんでした');return}const v=vs();if(v.vid!==id){v.vid=id;v.off=null;v.bpm=song.bpm;vs()}save();syncPanel();cueVideo();sMsg(SYNC[id]?'読み込みました。この動画は自動で合わせてあります':'読み込みました。①で1小節目を合わせてください')};
 
 /* 編集 */
 $('#save').onclick=()=>{const t=$('#ed').value;if(!parse(t).bars.length){$('#edMsg').textContent='小節が読み取れませんでした';return}try{localStorage.setItem('ct2-'+st.song,t)}catch(e){}loadSong(st.song);$('#edMsg').textContent='反映しました'};
@@ -1015,8 +1031,8 @@ $('#reset').onclick=()=>{try{localStorage.removeItem('ct2-'+st.song)}catch(e){}l
 
 /* 再生バー */
 $('#bPlay').onclick=togglePlay;
-const curSecIdx=()=>{const t=getT(),b=Math.max(0,(t-off())/spb());return S.bars[barAt(Math.min(b,S.total-.01))].si};
-$('#bPrev').onclick=()=>{const vis=S.secs.map((s,i)=>i).filter(i=>S.secs[i].to>S.secs[i].from);let i=curSecIdx(),b=(getT()-off())/spb();const s=S.secs[i];let tgt=(b-s.sb>2||vis.indexOf(i)<=0)?s.sb:S.secs[vis[vis.indexOf(i)-1]].sb;seekBeat(tgt)};
+const curSecIdx=()=>{const t=getT(),b=Math.max(0,t2b(t));return S.bars[barAt(Math.min(b,S.total-.01))].si};
+$('#bPrev').onclick=()=>{const vis=S.secs.map((s,i)=>i).filter(i=>S.secs[i].to>S.secs[i].from);let i=curSecIdx(),b=t2b(getT());const s=S.secs[i];let tgt=(b-s.sb>2||vis.indexOf(i)<=0)?s.sb:S.secs[vis[vis.indexOf(i)-1]].sb;seekBeat(tgt)};
 $('#bNext').onclick=()=>{const vis=S.secs.map((s,i)=>i).filter(i=>S.secs[i].to>S.secs[i].from);const i=vis.indexOf(curSecIdx());if(i>=0&&i<vis.length-1)seekBeat(S.secs[vis[i+1]].sb)};
 $('#tl').addEventListener('click',e=>{const r=$('#tl').getBoundingClientRect(),f=(e.clientX-r.left)/r.width;seekBeat(S.bars[barAt(f*S.total)].start)});
 $('#bAuto').onclick=()=>{st.auto=!st.auto;syncPanel();save()};
