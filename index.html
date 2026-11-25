@@ -202,7 +202,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   .scored .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .dgs svg{max-height:72px}
   /* スマホ：上に固定する部分を詰める（動画の横に今／次のコード） */
-  .left{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-areas:"v n" "v p" "r r" "d d";column-gap:12px;row-gap:6px;padding:8px 12px 8px;border-bottom:1px solid var(--line)}
+  .left{top:env(safe-area-inset-top,0px);display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-areas:"v n" "v p" "r r" "d d";column-gap:12px;row-gap:6px;padding:8px 12px 8px;border-bottom:1px solid var(--line)}
   .cur{display:contents}
   .vid{grid-area:v;border-radius:8px;align-self:start}
   .c2{grid-area:n;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0}
@@ -225,6 +225,33 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   .pg{padding-top:12px}
   .kb{flex-wrap:wrap;row-gap:4px}.kb em{white-space:normal}.kb i{min-width:20px}
   h1{font-size:20px;margin-bottom:6px}
+}
+/* iPhone 17 Pro（402×874）向けの微調整：幅に余裕がある分、図と文字を少し大きく */
+@media(min-width:396px) and (max-width:600px){
+  .dgs svg{max-height:66px}
+  .st.big{font-size:20px}
+  .sg{font-size:17px}
+  .big{font-size:38px}
+}
+/* スマホ横向き（ギターを構えてスタンドに立てたとき）：左に動画と今のコード、右に小節 */
+@media(orientation:landscape) and (max-height:500px){
+  .hd,.trow,.pg>.chn,.pg>h1{display:none}
+  .pg{padding:8px max(env(safe-area-inset-left),10px) 0 max(env(safe-area-inset-left),10px)}
+  .cols{grid-template-columns:minmax(0,250px) minmax(0,1fr);gap:12px}
+  .left{position:sticky;top:6px;display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:none;gap:6px;margin:0;padding:0;border:0;max-height:calc(100vh - 70px);overflow-y:auto;background:none}
+  .cur{display:block;border-radius:10px;border-width:1px;padding:8px 10px}
+  .vid{border-radius:8px}
+  .c1,.rhl,.c4{display:none}
+  .c2{flex-direction:row;align-items:flex-end}
+  .big{font-size:32px}.nx{font-size:20px}.nxl{display:inline}
+  .c3{margin:4px 0}
+  .dgs{grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.dgs svg{max-height:56px}
+  .grid,.scored .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .bar{padding-top:4px;padding-bottom:calc(4px + env(safe-area-inset-bottom));gap:10px}
+  .ib.pl{width:42px;height:42px}.ib{width:38px;height:38px}.tl{height:32px}
+  body{padding-bottom:60px}.pn{bottom:60px}
+  .rh{margin:2px 0}.st.big{font-size:17px}
+  .left{max-height:calc(100vh - 64px)}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
@@ -852,7 +879,7 @@ function autoScroll(el){
   const r=el.getBoundingClientRect(),top=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick'))||0,vh=innerHeight-90;
   if(r.top<top+10||r.bottom>vh-10)el.scrollIntoView({block:'start',behavior:'smooth'});
 }
-function setStick(){const mob=innerWidth<=900;document.documentElement.style.setProperty('--stick',(mob?$('#left').getBoundingClientRect().height+12:80)+'px')}
+function setStick(){const mob=innerWidth<=900&&!matchMedia('(orientation:landscape) and (max-height:500px)').matches;document.documentElement.style.setProperty('--stick',(mob?$('#left').getBoundingClientRect().height+12:80)+'px')}
 new ResizeObserver(setStick).observe($('#left'));addEventListener('resize',setStick);
 
 /* ---------- 設定パネル ---------- */
