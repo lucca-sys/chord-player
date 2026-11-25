@@ -50,7 +50,12 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .capo{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px 4px 3px 12px}
 .capo>span{font-size:13px;color:var(--mut);white-space:nowrap}
-.capo .step{border:0}.capo .step b{min-width:34px;font-size:18px}
+.capo .capoV,.row .capoV{min-width:1.2em;text-align:center;font-size:22px}
+.cs{position:relative;width:200px;padding:6px 0 14px}
+.cs input{width:100%;height:28px;margin:0;accent-color:var(--or);cursor:pointer}
+.crm{position:absolute;top:0;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--gr);transform:translateX(-5px);pointer-events:none}
+.cst{position:absolute;left:8px;right:8px;bottom:0;height:12px;font-size:10px;color:var(--mut);font-family:"Barlow Semi Condensed",sans-serif}
+.cst span{position:absolute;transform:translateX(-50%)}
 .rec{min-height:34px;padding:0 10px;border-radius:8px;background:rgba(95,211,155,.14);color:var(--gr);font-size:13px;font-weight:700;white-space:nowrap}
 .rec.same{background:transparent;color:var(--mut);font-weight:500}
 .ab{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:9px;background:var(--card);font-size:14px;white-space:nowrap}
@@ -176,7 +181,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
   .sg{font-size:17px;padding:6px 2px}
   .bc{min-height:84px;padding:7px 6px}
-  .infos{width:100%}.info{padding:0 14px}.info b{font-size:17px}
+  .infos{width:100%}.capo{width:100%}.capo .cs{flex:1;width:auto}.info{padding:0 14px}.info b{font-size:17px}
   .trow{margin-bottom:12px}
 }
 @media(max-width:600px){
@@ -223,7 +228,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
       <div class="info"><span>転調</span><b class="cn" id="iMod"></b></div>
     </div>
     <div class="acts">
-      <div class="capo"><span>カポ</span><div class="step"><button class="capoM" aria-label="カポを下げる">−</button><b class="cn capoV">0</b><button class="capoP" aria-label="カポを上げる">+</button></div><button class="rec capoRec"></button></div>
+      <div class="capo"><span>カポ</span><b class="cn capoV">0</b><div class="cs"><input type="range" class="capoS" min="0" max="9" step="1" value="0" aria-label="カポの位置"><i class="crm" title="おすすめの位置"></i><div class="cst"><span>0</span><span>3</span><span>5</span><span>7</span><span>9</span></div></div><button class="rec capoRec"></button></div>
       <button class="ab" id="aSync">⏱ 動画と合わせる</button>
       <button class="ab" id="aLoop" aria-pressed="false">🔁 セクションをくり返す</button>
       <button class="ab" id="aEdit">✎ 編集</button>
@@ -268,7 +273,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   <div class="pt"><button data-t="disp" aria-pressed="true">表示設定</button><button data-t="sync">動画と合わせる</button><button data-t="edit">編集</button><button class="x" id="pnX" aria-label="閉じる">×</button></div>
   <div data-p="disp" class="pb2">
     <div class="row"><span>移調</span><div class="step"><button id="trM" aria-label="半音下げる">−</button><b class="cn" id="trV">0</b><button id="trP" aria-label="半音上げる">+</button></div></div>
-    <div class="row"><span>カポ</span><div style="display:flex;gap:8px;align-items:center"><button class="rec capoRec"></button><div class="step"><button class="capoM" aria-label="カポを下げる">−</button><b class="cn capoV">0</b><button class="capoP" aria-label="カポを上げる">+</button></div></div></div>
+    <div class="row"><span>カポ</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><b class="cn capoV">0</b><div class="cs"><input type="range" class="capoS" min="0" max="9" step="1" value="0" aria-label="カポの位置"><i class="crm" title="おすすめの位置"></i><div class="cst"><span>0</span><span>3</span><span>5</span><span>7</span><span>9</span></div></div><button class="rec capoRec"></button></div></div>
     <div class="row"><span>表記</span><div class="seg" id="disp"><button data-d="name">コード名</button><button data-d="deg">度数</button><button data-d="both">両方</button></div></div>
     <label class="ck"><input type="checkbox" id="oSimple">シンプル（テンションや分数コードを省く）</label>
     <label class="ck"><input type="checkbox" id="oPower">パワーコードで表示（ルート＋5度）</label>
@@ -536,7 +541,7 @@ function secKeyName(si,shapeKey){const k=S.secs[si]&&S.secs[si].k;if(!k)return k
 let curRef=null;
 const deg=r=>DEG[(r-(curRef!=null?curRef:keyPc())+120)%12];
 /* 表示用のつづり：フラット系のキーなら♭、それ以外は♯で書く */
-const SHN=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'],FLK=new Set([5,10,3,8,1,6]);
+const SHN=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'],FLK=new Set([5,10,3,8]);
 const spell=r=>(FLK.has(curRef!=null?curRef:keyPc())?NAMES:SHN)[r];
 const col=r=>st.color?`hsl(${HUE[r]} 72% 68%)`:'inherit';
 function chtml(c,ref){curRef=ref==null?null:ref;try{return chtml0(c)}finally{curRef=null}}
@@ -689,6 +694,9 @@ function recCapo(){
 function capoUI(){
   const o=opt(),c=o.capo||0,r=recCapo();
   $$('.capoV').forEach(e=>e.textContent=c);
+  $$('.capoS').forEach(e=>{if(+e.value!==c)e.value=c});
+  $$('.crm').forEach(e=>e.style.left=`calc(8px + (100% - 16px) * ${r/9})`);
+  $$('.cst').forEach(e=>e.querySelectorAll('span').forEach(s=>s.style.left=`${(+s.textContent)/9*100}%`));
   $$('.capoRec').forEach(e=>{e.textContent=r===c?`おすすめ カポ${r} ✓`:`おすすめ カポ${r}`;e.classList.toggle('same',r===c);e.dataset.r=r});
 }
 function setCapo(k){opt().capo=Math.max(0,Math.min(9,k));capoUI();rerender()}
@@ -841,7 +849,8 @@ $('#pnX').onclick=closePanel;
 $('.pt').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)openPanel(b.dataset.t)});
 $('#aSync').onclick=()=>openPanel('sync');$('#aEdit').onclick=()=>openPanel('edit');
 $('#vmsg').addEventListener('click',e=>{if(e.target.id==='vOpen'){openPanel('sync');$('#url').focus()}});
-document.addEventListener('click',e=>{const t=e.target.closest('.capoM,.capoP,.capoRec');if(!t)return;const c=opt().capo||0;if(t.classList.contains('capoM'))setCapo(c-1);else if(t.classList.contains('capoP'))setCapo(c+1);else setCapo(+t.dataset.r)});
+document.addEventListener('click',e=>{const t=e.target.closest('.capoRec');if(t)setCapo(+t.dataset.r)});
+document.addEventListener('input',e=>{if(e.target.classList.contains('capoS')){const v=+e.target.value;if(v!==(opt().capo||0))setCapo(v)}});
 $('#trM').onclick=()=>{opt().tr=(opt().tr-1+18)%12-6;syncPanel();rerender()};
 $('#trP').onclick=()=>{opt().tr=(opt().tr+1+18)%12-6;syncPanel();rerender()};
 $('#disp').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;st.disp=b.dataset.d;syncPanel();rerender()});
