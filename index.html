@@ -94,6 +94,10 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .st i{font-style:normal;padding:2px 0;border-radius:3px}
 .st i.g{opacity:.28}.st i.h{opacity:.25}.st i.x{color:#8d939c;position:relative}.st i.x::after{content:'×';position:absolute;right:8%;top:-2px;font-size:.6em;color:#c9ced6}
 .bc.on .st i.c{background:var(--or);color:#111;opacity:1}
+.lv{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px}
+.lv>span{font-size:12px;color:var(--mut);padding:0 6px}
+.lv button{min-height:34px;padding:0 10px;border-radius:7px;font-size:13px;color:var(--mut);white-space:nowrap}
+.lv button[aria-pressed=true]{background:var(--or);color:#111;font-weight:700}
 .rh{display:flex;align-items:center;gap:12px;margin:2px 0 4px}
 .rh>span{font-size:12px;color:var(--mut);white-space:nowrap}
 .st.big{flex:1;font-size:22px;font-weight:700}
@@ -233,7 +237,8 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   .trow{display:none}
   body.infoopen .trow{display:flex;flex-direction:column;align-items:stretch;gap:14px;position:fixed;top:62px;left:12px;right:12px;z-index:35;background:#1d2026;border:1px solid #363b45;border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.55);padding:14px;margin:0;max-height:calc(100vh - 180px);overflow:auto}
   body.infoopen .trow .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  body.infoopen .trow .capo{grid-column:1/-1}
+  body.infoopen .trow .capo,body.infoopen .trow .lv{grid-column:1/-1}
+  body.infoopen .trow .lv button{flex:1}
   body.infoopen .trow .ab{min-height:44px;white-space:normal;font-size:14px;padding:0 8px}
   body.infoopen .trow{overflow-x:hidden}
   body.infoopen .trow .infos{width:100%}
@@ -298,6 +303,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
     </div>
     <div class="acts">
       <div class="capo"><span>カポ</span><b class="cn capoV">0</b><div class="cs"><input type="range" class="capoS" min="0" max="9" step="1" value="0" aria-label="カポの位置"><i class="crm" title="おすすめの位置"></i><div class="cst"><span>0</span><span>3</span><span>5</span><span>7</span><span>9</span></div></div><button class="rec capoRec"></button></div>
+      <div class="lv" role="group" aria-label="右手の難しさ"><span>右手</span><button data-lv="1">Lv1 のばす</button><button data-lv="2">Lv2 4分</button><button data-lv="3">Lv3 細かく</button></div>
       <button class="ab" id="aSync">⏱ 動画と合わせる</button>
       <button class="ab" id="aLoop" aria-pressed="false">🔁 セクションをくり返す</button>
       <button class="ab" id="aEdit">✎ 編集</button>
@@ -311,7 +317,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
         <div class="c1"><span>現在</span><span>次</span></div>
         <div class="c2"><div class="big cn" id="now">—</div><div class="nx cn"><span class="nxl">次</span><span id="next">—</span></div></div>
         <div class="c3"><span id="pos">—</span><div class="pb" id="pb"></div></div>
-        <div class="rh" id="rhBox"><span>右手</span><div class="st big" id="rh"></div></div>
+        <div class="rh" id="rhBox"><span id="rhLab">右手</span><div class="st big" id="rh"></div></div>
         <div class="rhl" id="rhl">↓ダウン ↑アップ　<i class="g">↓↑</i>＝空振り　<b class="xx">↓×</b>＝ブラッシング（左手で弦に軽く触れて音を消して振る）　·＝のばす</div>
         <div class="c4"><span>今のキー</span><b id="nowKey"></b></div>
         <div class="dgs"><figure><figcaption>押さえ方（今）</figcaption><div id="dNow"></div></figure><figure><figcaption>次</figcaption><div id="dNext"></div></figure></div>
@@ -343,6 +349,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   <div data-p="disp" class="pb2">
     <div class="row"><span>移調</span><div class="step"><button id="trM" aria-label="半音下げる">−</button><b class="cn" id="trV">0</b><button id="trP" aria-label="半音上げる">+</button></div></div>
     <div class="row"><span>カポ</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><b class="cn capoV">0</b><div class="cs"><input type="range" class="capoS" min="0" max="9" step="1" value="0" aria-label="カポの位置"><i class="crm" title="おすすめの位置"></i><div class="cst"><span>0</span><span>3</span><span>5</span><span>7</span><span>9</span></div></div><button class="rec capoRec"></button></div></div>
+    <div class="row"><span>弾き方</span><div class="lv" role="group" aria-label="右手の難しさ"><button data-lv="1">Lv1 のばす</button><button data-lv="2">Lv2 4分</button><button data-lv="3">Lv3 細かく</button></div></div>
     <div class="row"><span>表記</span><div class="seg" id="disp"><button data-d="name">コード名</button><button data-d="deg">度数</button><button data-d="both">両方</button></div></div>
     <label class="ck"><input type="checkbox" id="oSimple">シンプル（テンションや分数コードを省く）</label>
     <label class="ck"><input type="checkbox" id="oPower">パワーコードで表示（ルート＋5度）</label>
@@ -368,7 +375,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
     <div class="urlr"><input id="url" type="url" inputmode="url" placeholder="https://youtu.be/…" aria-label="YouTubeのURL"><button id="load">読み込む</button></div>
   </div>
   <div data-p="edit" class="pb2 sy" hidden>
-    <p><code>[セクション名]</code> の下に小節を <code>|</code> で区切って書きます。1小節にコード2つで2拍ずつ、<code>Em Em Em F</code> なら3拍＋1拍。2拍の小節は頭に <code>2:</code>。右手は <code>@ DuDUdUDU</code> のように8分音符8つで書きます（D=ダウン U=アップ d/u=空振り X=ブラッシング↓ x=ブラッシング↑ -=のばす。<code>@ L</code> はコードが変わる所だけ弾いてのばす。並べると小節ごとに順番に使います）。保存はこの端末のブラウザだけです。</p>
+    <p><code>[セクション名]</code> の下に小節を <code>|</code> で区切って書きます。1小節にコード2つで2拍ずつ、<code>Em Em Em F</code> なら3拍＋1拍。2拍の小節は頭に <code>2:</code>。右手は <code>@ DuDUdUDU</code> のように8分音符8つで書きます（D=ダウン U=アップ d/u=空振り X=ブラッシング↓ x=ブラッシング↑ -=のばす。<code>@ L</code> はコードが変わる所だけ弾いてのばす。<code>@2 …</code> のように数字を付けると、その難しさ（Lv1〜3）のときだけ使う形になります。並べると小節ごとに順番に使います）。保存はこの端末のブラウザだけです。</p>
     <textarea id="ed" spellcheck="false" aria-label="コード譜"></textarea>
     <div class="edb"><button id="save">保存して反映</button><button id="reset">最初の譜面に戻す</button><span class="msg" id="edMsg"></span></div>
   </div>
@@ -385,7 +392,7 @@ C | D | Em | Em
 C | D | Bm | Em D
 Am | Bm | Em | Em`;
 const RIFF='Em | Em Em Em F | Em | Em Em Em F';
-const PL='@ L',PR='@ DUXxDUXx DUXxDxDx',PM='@ DuDUdUDU';
+const PL='@ L',PR='@ DUXxDUXx DUXxDxDx\n@2 D---D--- D---D-D-',PM='@ DuDUdUDU';
 const B_L=`Em | Em | Em | Em\n${RIFF}\nEm | Em | Em | Em\n${RIFF}`;
 const C_L=`C | D | Bm | Em D
 C | D | Em | D
@@ -673,7 +680,7 @@ function parse(txt){
     const m=line.match(/^\[(.+)\]$/);
     if(m){cur={name:m[1],from:bars.length};secs.push(cur);return}
     if(!cur){cur={name:'',from:bars.length};secs.push(cur)}
-    if(line[0]==='@'){cur.pat=line.slice(1).trim().split(/\s+/).filter(Boolean);return}
+    if(line[0]==='@'){const m3=line.match(/^@([123])?\s*(.*)$/),t=m3[2].split(/\s+/).filter(Boolean);if(m3[1]){(cur.pats=cur.pats||{})[m3[1]]=t}else cur.pat=t;return}
     if(/^!key\s/.test(line)){const m2=line.slice(5).trim().match(/^([A-G][#b]?)\s*(major|minor|m)?/i);if(m2)cur.key={pc:PC[m2[1]],minor:/^m/i.test(m2[2]||'')&&!/^major/i.test(m2[2]||'')};return}
     line.split('|').forEach(b=>{b=b.trim();if(!b)return;let beats=4;const bm=b.match(/^(\d)\s*:\s*(.*)$/);if(bm){beats=Math.max(1,+bm[1]);b=bm[2]}
       const toks=b.split(/\s+/).filter(Boolean);if(toks.length)bars.push({si:secs.length-1,beats,toks})});
@@ -683,7 +690,11 @@ function parse(txt){
   secs.forEach((s,i)=>{s.to=i+1<secs.length?secs[i+1].from:bars.length;s.sb=bars[s.from]?bars[s.from].start:t;s.eb=s.to>s.from?bars[s.to-1].start+bars[s.to-1].beats:s.sb});
   return {bars,secs:secs,total:t};
 }
-function patOf(i){const b=S.bars[i],s=S.secs[b.si];if(!s.pat||!s.pat.length)return null;const p=s.pat[(i-s.from)%s.pat.length];
+/* 右手の難しさ：Lv1＝コードが変わる所だけ鳴らしてのばす／Lv2＝4分音符でダウン／Lv3＝細かく刻む（譜面の@の形） */
+function patList(s){const lv=opt().lv||2;if(!s.pat&&!s.pats)return null;if(s.pats&&s.pats[lv])return s.pats[lv];
+  if(lv===1)return ['L'];if(lv===2)return ['Q'];return (!s.pat||(s.pat.length===1&&s.pat[0]==='L'))?['DUDUDUDU']:s.pat}
+function patOf(i){const b=S.bars[i],s=S.secs[b.si],pl=patList(s);if(!pl||!pl.length)return null;const p=pl[(i-s.from)%pl.length];
+  if(p==='Q'){const a=Array(b.beats*2).fill('-');for(let k=0;k<a.length;k+=2)a[k]='D';let k=0;segs(b).forEach(g=>{if(a[k]!=null)a[k]='D';k+=Math.round(g.w*2)});return a.join('')}
   if(p==='L'){const a=Array(b.beats*2).fill('-');let k=0;segs(b).forEach(g=>{if(g.c.r!=null&&a[k]!=null)a[k]='D';k+=Math.round(g.w*2)});return a.join('')}
   return (p+'--------').slice(0,b.beats*2)}
 const AR={D:['↓',''],U:['↑',''],d:['↓','g'],u:['↑','g'],X:['↓','x'],x:['↑','x'],'-':['·','h']};
@@ -765,6 +776,7 @@ function recCapo(){
 }
 function capoUI(){
   const o=opt(),c=o.capo||0,r=recCapo();
+  const lv=opt().lv||2;$$('.lv [data-lv]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.lv===lv));$('#rhLab').textContent=`右手 Lv${lv}`;
   $$('.capoV').forEach(e=>e.textContent=c);$('#hdCapo').textContent=`カポ${c}`;
   $$('.capoS').forEach(e=>{if(+e.value!==c)e.value=c});
   $$('.crm').forEach(e=>e.style.left=`calc(8px + (100% - 16px) * ${r/9})`);
@@ -927,7 +939,7 @@ $('#pnX').onclick=closePanel;
 $('.pt').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)openPanel(b.dataset.t)});
 $('#aSync').onclick=()=>openPanel('sync');$('#aEdit').onclick=()=>openPanel('edit');
 $('#vmsg').addEventListener('click',e=>{if(e.target.id==='vOpen'){openPanel('sync');$('#url').focus()}});
-document.addEventListener('click',e=>{const t=e.target.closest('.capoRec');if(t)setCapo(+t.dataset.r)});
+document.addEventListener('click',e=>{const t=e.target.closest('.capoRec');if(t)setCapo(+t.dataset.r);const l=e.target.closest('.lv [data-lv]');if(l){opt().lv=+l.dataset.lv;capoUI();rerender()}});
 document.addEventListener('input',e=>{if(e.target.classList.contains('capoS')){const v=+e.target.value;if(v!==(opt().capo||0))setCapo(v)}});
 $('#trM').onclick=()=>{opt().tr=(opt().tr-1+18)%12-6;syncPanel();rerender()};
 $('#trP').onclick=()=>{opt().tr=(opt().tr+1+18)%12-6;syncPanel();rerender()};
