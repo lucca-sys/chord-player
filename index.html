@@ -201,6 +201,30 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   .c4{display:none}
   .scored .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .dgs svg{max-height:72px}
+  /* スマホ：上に固定する部分を詰める（動画の横に今／次のコード） */
+  .left{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-areas:"v n" "v p" "r r" "d d";column-gap:12px;row-gap:6px;padding:8px 12px 8px;border-bottom:1px solid var(--line)}
+  .cur{display:contents}
+  .vid{grid-area:v;border-radius:8px;align-self:start}
+  .c2{grid-area:n;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0}
+  .big{font-size:34px;max-width:100%}
+  .nx{font-size:18px;text-align:left}
+  .c3{grid-area:p;flex-direction:column;align-items:stretch;gap:4px;margin:0;font-size:11px;align-self:end}
+  .c3 .pb{flex:none}
+  .rh{grid-area:r;margin:0;gap:8px}.rh>span{font-size:11px}
+  .st.big{font-size:18px}
+  .rhl,.c1,.c4{display:none}
+  .dgs{grid-area:d;margin:0;gap:8px}
+  .dgs figure{padding:4px 6px 0}
+  .dgs figcaption b{font-size:18px}
+  .dgs svg{max-height:58px}
+  .grid{gap:6px}
+  .bc{padding:6px 6px;gap:4px;min-height:0}
+  .sg{font-size:16px;padding:4px 2px}
+  .bc .st{font-size:12px}
+  .sc{min-height:0}
+  .pg{padding-top:12px}
+  .kb{flex-wrap:wrap;row-gap:4px}.kb em{white-space:normal}.kb i{min-width:20px}
+  h1{font-size:20px;margin-bottom:6px}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
