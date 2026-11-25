@@ -22,6 +22,9 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 .hd{display:flex;align-items:center;gap:14px;padding:10px max(3vw,14px);border-bottom:1px solid var(--line);position:relative;z-index:6;background:var(--bg)}
 .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;white-space:nowrap}
 .brand i{width:22px;height:22px;border-radius:50%;background:var(--or);display:grid;place-items:center;font-style:normal;font-size:12px;color:#111}
+.infob{display:none;align-items:center;gap:6px;min-height:42px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:14px;white-space:nowrap}
+.infob[aria-expanded=true]{border-color:var(--or);color:var(--or)}
+.infob .dots3{font-size:18px;line-height:1}
 .pick{margin-inline-start:auto;display:flex;align-items:center;gap:10px;min-height:42px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);max-width:min(520px,70vw)}
 .pick .pk1{font-size:12px;color:var(--mut);white-space:nowrap}.pick b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pick .pk2{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pick .pk3{color:var(--mut)}
@@ -223,6 +226,20 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   .bc .st{font-size:12px}
   .sc{min-height:0}
   .pg{padding-top:12px}
+  /* 再生前に場所を取っていた曲情報・カポ・ボタン類は右上の「カポ ⋯」にまとめる */
+  .brand{font-size:0;gap:0}.hd{gap:8px;padding:8px 12px;flex-wrap:nowrap}
+  .infob{display:flex}
+  .pg>.chn,.pg>h1{display:none}
+  .trow{display:none}
+  body.infoopen .trow{display:flex;flex-direction:column;align-items:stretch;gap:14px;position:fixed;top:62px;left:12px;right:12px;z-index:35;background:#1d2026;border:1px solid #363b45;border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.55);padding:14px;margin:0;max-height:calc(100vh - 180px);overflow:auto}
+  body.infoopen .trow .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  body.infoopen .trow .capo{grid-column:1/-1}
+  body.infoopen .trow .ab{min-height:44px;white-space:normal;font-size:14px;padding:0 8px}
+  body.infoopen .trow{overflow-x:hidden}
+  body.infoopen .trow .infos{width:100%}
+  body.infoopen .trow .capo{flex-wrap:wrap;padding:8px 10px}
+  body.infoopen .trow .capo .cs{flex:1 1 140px}
+  body.infoopen .trow .rec{flex:1 1 100%;min-height:40px}
   .kb{flex-wrap:wrap;row-gap:4px}.kb em{white-space:normal}.kb i{min-width:20px}
   h1{font-size:20px;margin-bottom:6px}
 }
@@ -260,6 +277,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
 <header class="hd">
   <div class="brand"><i>♪</i>コード練習</div>
   <button class="pick" id="pick" aria-haspopup="dialog"><span class="pk1">曲リスト</span><b id="pickT"></b><span class="pk2" id="pickA"></span><span class="pk3">▾</span></button>
+  <button class="infob" id="infoBtn" aria-expanded="false" aria-label="曲の情報とカポ"><span id="hdCapo">カポ0</span><span class="dots3">⋯</span></button>
 </header>
 
 <div class="lib" id="lib" role="dialog" aria-label="曲リスト"><div class="box">
@@ -744,7 +762,7 @@ function recCapo(){
 }
 function capoUI(){
   const o=opt(),c=o.capo||0,r=recCapo();
-  $$('.capoV').forEach(e=>e.textContent=c);
+  $$('.capoV').forEach(e=>e.textContent=c);$('#hdCapo').textContent=`カポ${c}`;
   $$('.capoS').forEach(e=>{if(+e.value!==c)e.value=c});
   $$('.crm').forEach(e=>e.style.left=`calc(8px + (100% - 16px) * ${r/9})`);
   $$('.cst').forEach(e=>e.querySelectorAll('span').forEach(s=>s.style.left=`${(+s.textContent)/9*100}%`));
@@ -875,9 +893,15 @@ function render(b){
     last.bi=bi;last.beat=beat;last.pre=pre;
   }
 }
+/* 自動スクロール：今の小節の段を「下から2段目」に置き、次の段がいつも見えるようにする */
 function autoScroll(el){
-  const r=el.getBoundingClientRect(),top=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stick'))||0,vh=innerHeight-90;
-  if(r.top<top+10||r.bottom>vh-10)el.scrollIntoView({block:'start',behavior:'smooth'});
+  const r=el.getBoundingClientRect(),L=$('#left').getBoundingClientRect();
+  const topLim=(L.left<r.right&&L.right>r.left&&L.bottom<innerHeight/2)?L.bottom+6:8;
+  const botLim=innerHeight-$('.bar').getBoundingClientRect().height-6;
+  const i=cards.indexOf(el);let nx=null;for(let j=i+1;j<cards.length;j++){const t=cards[j].getBoundingClientRect();if(t.top>r.top+5){nx=t;break}}
+  let d=(nx?nx.bottom:r.bottom)-botLim;
+  if(r.top-d<topLim)d=r.top-topLim;
+  if(Math.abs(d)>4)window.scrollBy({top:d,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
 }
 function setStick(){const mob=innerWidth<=900&&!matchMedia('(orientation:landscape) and (max-height:500px)').matches;document.documentElement.style.setProperty('--stick',(mob?$('#left').getBoundingClientRect().height+12:80)+'px')}
 new ResizeObserver(setStick).observe($('#left'));addEventListener('resize',setStick);
@@ -954,10 +978,13 @@ function renderLib(){
 }
 const openLib=()=>{$('#q').value='';renderLib();$('#lib').classList.add('open');setTimeout(()=>{try{if(innerWidth>600)$('#q').focus()}catch(e){}},50)};
 const closeLib=()=>$('#lib').classList.remove('open');
-$('#pick').onclick=openLib;$('#libX').onclick=closeLib;
+$('#pick').onclick=openLib;
+const setInfo=o=>{document.body.classList.toggle('infoopen',o);$('#infoBtn').setAttribute('aria-expanded',o)};
+$('#infoBtn').onclick=e=>{e.stopPropagation();setInfo(!document.body.classList.contains('infoopen'))};
+document.addEventListener('click',e=>{if(!document.body.classList.contains('infoopen'))return;if(e.target.closest('.trow')&&!e.target.closest('#aSync,#aEdit'))return;if(e.target.closest('#infoBtn'))return;setInfo(false)});$('#libX').onclick=closeLib;
 $('#lib').addEventListener('click',e=>{if(e.target.id==='lib'){closeLib();return}const b=e.target.closest('[data-s]');if(b){closeLib();if(b.dataset.s!==st.song)loadSong(b.dataset.s)}});
 $('#q').addEventListener('input',renderLib);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePanel();closeLib();return}if(e.target.matches('input,textarea,select'))return;if(e.code==='Space'){e.preventDefault();togglePlay()}if(e.key==='Escape'){closePanel();closeLib()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePanel();closeLib();setInfo(false);return}if(e.target.matches('input,textarea,select'))return;if(e.code==='Space'){e.preventDefault();togglePlay()}if(e.key==='Escape'){closePanel();closeLib()}});
 
 loadSong(SONGS[st.song]?st.song:'mari');
 STARTS=new Set();const refreshStarts=()=>{STARTS=new Set(S.bars.map(b=>b.start))};refreshStarts();
