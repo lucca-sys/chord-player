@@ -68,6 +68,7 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .big{font-size:clamp(44px,6vw,58px);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nx{font-size:28px;color:#a9afb9;white-space:nowrap;text-align:right}
 .nx .rt{filter:saturate(.6)}
+.nxl{display:none;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:500;color:var(--mut);margin-inline-end:6px;vertical-align:middle}
 .c3{display:flex;align-items:center;gap:12px;margin:8px 0 10px;font-size:13px;color:var(--mut)}
 .c3 .pb{flex:1;display:flex;gap:5px}
 .pb i{flex:1;height:5px;border-radius:3px;background:#3a3f48}
@@ -76,7 +77,9 @@ h1{margin:2px 0 10px;font-size:clamp(22px,3vw,30px);line-height:1.25}
 .c4 b{color:var(--gr);font-weight:500}
 .dgs{display:grid;grid-template-columns:1.35fr 1fr;gap:10px;margin-top:12px}
 .dgs figure{margin:0;background:#2a1710;border-radius:10px;padding:6px 6px 2px}
-.dgs figcaption{font-size:11px;color:#cbbba8;padding:0 4px}
+.dgs figcaption{display:flex;align-items:baseline;gap:8px;font-size:11px;color:#cbbba8;padding:2px 4px 0}
+.dgs figcaption b{font-size:22px;line-height:1.1;color:#f4ece2}.dgs figcaption b small{display:none}
+.dgs figcaption .fl:last-child:not(:first-child){margin-inline-start:auto}
 .dgs svg{display:block;width:100%;height:auto}
 .nodg .dgs{display:none}
 .st{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));text-align:center;font-size:14px;line-height:1;color:#d6dae1;font-style:normal}
@@ -184,7 +187,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
   .tl span{font-size:0;padding:0}
   .tm{min-width:0;font-size:13px;margin-inline-end:auto}
   .sp,#bClick{display:none}
-  .big{font-size:36px}.c1{display:none}.c3{margin:4px 0 0}
+  .big{font-size:36px}.c1{display:none}.nxl{display:inline}.c3{margin:4px 0 0}
   .dgs{grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.dgs figcaption{font-size:10px}
   .gap{display:none}
   .ib{width:40px;height:40px}
@@ -232,7 +235,7 @@ textarea{width:100%;min-height:300px;font:13px/1.5 ui-monospace,Menlo,monospace;
       <div class="vid"><div id="yt"></div><div class="vmsg" id="vmsg"></div></div>
       <div class="cur">
         <div class="c1"><span>現在</span><span>次</span></div>
-        <div class="c2"><div class="big cn" id="now">—</div><div class="nx cn" id="next">—</div></div>
+        <div class="c2"><div class="big cn" id="now">—</div><div class="nx cn"><span class="nxl">次</span><span id="next">—</span></div></div>
         <div class="c3"><span id="pos">—</span><div class="pb" id="pb"></div></div>
         <div class="rh" id="rhBox"><span>右手</span><div class="st big" id="rh"></div></div>
         <div class="rhl" id="rhl">↓ダウン ↑アップ　<i class="g">↓↑</i>＝空振り　<b class="xx">↓×</b>＝ブラッシング（左手で弦に軽く触れて音を消して振る）　·＝のばす</div>
@@ -707,7 +710,7 @@ function loadSong(id){
 }
 function renderInfo(){
   const cp=opt().capo||0;$('#iKey').textContent=keyName();$('#iTs').textContent=song.ts;$('#iBpm').textContent=`${Math.round(bpm())} BPM`;$('#iMod').textContent=`${song.mods} 回`;$('#nowKey').textContent=cp?`${keyName()}（カポ${cp}・${keyName(true).split(' ')[0]}の形）`:keyName();
-  $$('.dgs figcaption')[0].textContent=cp?`押さえ方（今）・カポ${cp}`:'押さえ方（今）';
+  if(typeof last!=='undefined')last.key=null;
 }
 function rerender(){buildChanges();renderInfo();renderSheet();capoUI();last.cn=last.nn=null;save()}
 
@@ -785,7 +788,10 @@ function render(b){
     const rf=refShape(bar.si),nsi=nx?S.bars[nx.bar].si:bar.si;
     $('#now').innerHTML=cn?chtml(cn,rf):'—';$('#next').innerHTML=nn?chtml(nn,refShape(nsi)):'';
     const cp=opt().capo||0;$('#nowKey').textContent=cp?`${secKeyName(bar.si)}（カポ${cp}・${secKeyName(bar.si,true).split(' ')[0]}の形）`:secKeyName(bar.si);
-    if(st.diag){$('#dNow').innerHTML=diag(cn||nn,true);$('#dNext').innerHTML=diag(nn,false)}}
+    if(st.diag){$('#dNow').innerHTML=diag(cn||nn,true);$('#dNext').innerHTML=diag(nn,false);
+      const cpc=opt().capo||0,fc=$$('.dgs figcaption');
+      fc[0].innerHTML=`<span class="fl">今</span><b class="cn">${cn?chtml(cn,rf):(nn?chtml(nn,refShape(nsi)):'—')}</b>${cpc?`<span class="fl">カポ${cpc}</span>`:''}`;
+      fc[1].innerHTML=`<span class="fl">次</span><b class="cn">${nn?chtml(nn,refShape(nsi)):'おわり'}</b>`}}
   const e8=pre?-1:Math.floor((bb-bar.start)*2);
   if(st.strum&&(bi!==last.bi||e8!==last.e8||pre!==last.pre)){
     const p=patOf(bi);$('#rhBox').style.visibility=p?'visible':'hidden';
